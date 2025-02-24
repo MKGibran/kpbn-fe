@@ -1,3 +1,4 @@
+import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 const MainRoutes = {
     path: '/main',
     meta: {
@@ -29,8 +30,12 @@ const MainRoutes = {
         {
             name: 'Logout',
             path: '/logout',
-            component: () => import('@/views/pages/SamplePage.vue')
-        },
+            beforeEnter: (_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+                localStorage.removeItem('token');
+                sessionStorage.removeItem('user');
+                next('/auth/login');
+            }
+        }
     ]
 };
 

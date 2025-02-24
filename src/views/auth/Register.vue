@@ -10,9 +10,10 @@ import RegisterForm from '@/components/auth/RegisterForm.vue';
                     <v-card rounded="md" elevation="10" class="px-sm-1 px-0 withbg mx-auto" max-width="500">
                         <v-card-item class="pa-sm-8">
                             <div class="d-flex justify-center py-4">
-                                <Logo />
+                                <!-- <Logo /> -->
+                                <h2>Logo</h2>
                             </div>
-                            <div class="text-body-1 text-muted text-center mb-3">Your Social Campaigns</div>
+                            <div class="text-body-1 text-muted text-center mb-3">Dashboard KPBN</div>
                             <RegisterForm />
                             <h6 class="text-h6 text-muted font-weight-regular d-flex justify-center align-center mt-3">
                                 Already have an Account?
