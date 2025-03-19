@@ -16,12 +16,12 @@ import LoginForm from '@/components/auth/LoginForm.vue';
                             </div>
                             <div class="text-body-1 text-muted text-center mb-3">Dashboard KPBN</div>
                             <LoginForm />
-                            <h6 class="text-h6 text-muted font-weight-regular d-flex justify-center align-center mt-3">
+                            <!-- <h6 class="text-h6 text-muted font-weight-regular d-flex justify-center align-center mt-3">
                                 Dont have an Account?
                                 <RouterLink to="/auth/register"
                                     class="text-primary text-decoration-none text-body-1 opacity-1 font-weight-medium pl-2">
                                     Register Here</RouterLink>
-                            </h6>
+                            </h6> -->
                         </v-card-item>
                     </v-card>
                 </v-col>

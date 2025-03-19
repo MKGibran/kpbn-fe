@@ -16,7 +16,7 @@ import { tableActionData } from '@/data/Dashboard';
             </div>
             <v-row class="d-flex justify-space-between">
                 <v-col cols="7" xl="5" class="mb-1">
-                    <h2 class="text-h2 mb-1 mt-2">$ 4,562</h2>
+                    <h2 class="text-h2 mb-1 mt-2">IDR 4,562</h2>
                 </v-col>
             </v-row>
         </v-card-item>

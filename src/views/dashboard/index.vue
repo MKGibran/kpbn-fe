@@ -79,7 +79,7 @@ const chartSeriesMonthlyVolume = ref([
     <div>
         <v-row class="center mb-5">
             <h3 class="font-weight-bold">Historical Price Trends and Forecast</h3>
-            <span class="text-textSecondary text-sm ml-2">(USD/kg)</span>
+            <span class="text-textSecondary text-sm ml-2">(IDR/kg)</span>
         </v-row>
         <v-row>
             <v-row>
@@ -93,12 +93,23 @@ const chartSeriesMonthlyVolume = ref([
                     <YearlyPrice />
                 </v-col>
             </v-row>
-            <v-col cols="12" md="12"><PriceTrends :title="'Daily Trend & Price Chart'" :yAxisTitle="yAxisPriceTitle" :xAxisCategories="dailyPriceX" :chartSeries="chartSeriesDailyPrice" /></v-col>
-            <v-col cols="12" md="12"><PriceTrends :title="'Weekly Trend & Price Chart'" :yAxisTitle="yAxisPriceTitle" :xAxisCategories="weeklyPriceX" :chartSeries="chartSeriesWeeklyPrice" /></v-col>
-            <v-col cols="12" md="12"><PriceTrends :title="'Monthly Trend & Price Chart'" :yAxisTitle="yAxisPriceTitle" :xAxisCategories="monthlyPriceX" :chartSeries="chartSeriesMonthlyPrice"/></v-col>
-            <v-col cols="12" md="12"><PriceTrends :title="'Daily Trend & Volume Chart'" :yAxisTitle="yAxisVolumeTitle" :xAxisCategories="dailyVolumeX" :chartSeries="chartSeriesDailyVolume" /></v-col>
-            <v-col cols="12" md="12"><PriceTrends :title="'Weekly Trend & Volume Chart'" :yAxisTitle="yAxisVolumeTitle" :xAxisCategories="weeklyVolumeX" :chartSeries="chartSeriesWeeklyVolume" /></v-col>
-            <v-col cols="12" md="12"><PriceTrends :title="'Monthly Trend & Volume Chart'" :yAxisTitle="yAxisVolumeTitle" :xAxisCategories="monthlyVolumeX" :chartSeries="chartSeriesMonthlyVolume"/></v-col>
+            <v-col cols="12" md="12">
+                <PriceTrends
+                    title="Price Trend & Chart"
+                    :yAxisTitle="yAxisPriceTitle"
+                    :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
+                    :chartSeries="{ daily: chartSeriesDailyPrice, weekly: chartSeriesWeeklyPrice, monthly: chartSeriesMonthlyPrice }"
+                />
+                </v-col>
+
+                <v-col cols="12" md="12">
+                <PriceTrends
+                    title="Volume Trend & Chart"
+                    :yAxisTitle="yAxisVolumeTitle"
+                    :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
+                    :chartSeries="{ daily: chartSeriesDailyVolume, weekly: chartSeriesWeeklyVolume, monthly: chartSeriesMonthlyVolume }"
+                />
+                </v-col>
             <v-col class="text-center text-center mt-2 mb-0">
                 <p class="text-muted">KPBN</p>
             </v-col>
