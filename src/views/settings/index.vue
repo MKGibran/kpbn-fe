@@ -8,7 +8,7 @@ import YearlyPrice from '@/components/dashboard/YearlyPrice.vue';
 
 <template>
     <div>
-        <v-row align="center mb-5">
+        <v-row class="center mb-5">
             <h3 class="font-weight-bold">Historical Price Trends and Forecast</h3>
             <span class="text-textSecondary text-sm ml-2">(USD/kg)</span>
         </v-row>

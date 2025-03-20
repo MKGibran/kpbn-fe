@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 
 const headers = ref([
-    { text: 'Trading Data', align: 'start', sortable: false, value: 'TradingDate' },
+    { text: 'Trading Data', align: 'start', sortable: false, value: 'Trading Date' },
     { text: 'Price (USD/Kg)', value: 'Price' },
     { text: 'Change (%)', value: 'Change' }
 ]);
@@ -24,7 +24,7 @@ const data = ref([
                 </div>
             </div>
             <v-row class="d-flex justify-space-between">
-                <v-data-table :headers="headers" :items="data" :items-per-page="5" class="elevation-1"></v-data-table>
+                <v-data-table :header="headers" :items="data" :items-per-page="5" class="elevation-1"></v-data-table>
             </v-row>
         </v-card-item>
     </v-card>

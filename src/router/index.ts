@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import MainRoutes from './MainRoutes';
 import AuthRoutes from './AuthRoutes';
 
@@ -9,8 +9,7 @@ export const router = createRouter({
             path: '/:pathMatch(.*)*',
             component: () => import('@/views/auth/Error.vue')
         },
-        MainRoutes,
-        AuthRoutes
-    ]
+        ...[MainRoutes], // Gunakan spread untuk menyebarkan objek menjadi elemen array
+        ...[AuthRoutes]
+    ] as RouteRecordRaw[] // Pastikan array sesuai dengan tipe `RouteRecordRaw[]`
 });
-
