@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, onMounted  } from 'vue';
 import sidebarItems from './vertical-sidebar/sidebarItem';
 import NavGroup from './vertical-sidebar/NavGroup/index.vue';
 import NavItem from './vertical-sidebar/NavItem/index.vue';
@@ -12,6 +12,13 @@ import ProfileDD from './vertical-header/ProfileDD.vue';
 import { Icon } from '@iconify/vue';
 const sidebarMenu = shallowRef(sidebarItems);
 const sDrawer = ref(true);
+const user = ref({ name: 'Guest' });
+
+const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        user.value = JSON.parse(storedUser); // Parse ke object
+    }
+
 </script>
 
 <template>
@@ -54,7 +61,7 @@ const sDrawer = ref(true);
             </div>
             <div>
                 <!-- Upgrade button -->
-                <v-btn class="mr-2" href="">Anne Taylor</v-btn>
+                <v-btn class="mr-2" href="">{{ user.name }}</v-btn>
                 <!-- User Profile -->
                 <ProfileDD />
             </div>

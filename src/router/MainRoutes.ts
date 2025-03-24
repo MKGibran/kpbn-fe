@@ -1,11 +1,11 @@
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 
 const MainRoutes = {
-    path: '/main',
+    path: '/',
     meta: {
         requiresAuth: true
     },
-    redirect: '/main/dashboard',  // Redirect ke halaman utama yang valid
+    redirect: '/dashboard',  // Redirect ke halaman utama yang valid
     component: () => import('@/layouts/full/FullLayout.vue'),
     children: [
         {

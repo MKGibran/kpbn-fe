@@ -1,24 +1,101 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-const checkbox = ref(true);
+import axios from 'axios';
+
+const form = ref(null);
+const name = ref('');
+const email = ref('');
+const password = ref('');
+const level = ref('1'); // Level 1
+const responseMessage = ref('');
+const SnackbarColor = ref('error');
+const showMessage = ref(false);
+
+const register = async () => {
+    // Validasi form sebelum mengirim data
+    if (!form.value) return;
+    const { valid } = await form.value.validate();
+    if (!valid) return;
+
+    try {
+        const response = await axios.post(
+            'http://127.0.0.1:5000/user/register',
+            new URLSearchParams({
+                name: name.value,
+                email: email.value,
+                password: password.value,
+                level: level.value
+            }),
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        responseMessage.value = response.data.message || 'User Added Successfully';
+        SnackbarColor.value = 'success';
+        showMessage.value = true; // Pindahkan ke sini agar hanya muncul saat berhasil
+    } catch (error) {
+        console.error('Error:', error);
+        responseMessage.value = error.response?.data?.message || 'An error occurred';
+        SnackbarColor.value = 'error';
+        showMessage.value = true; // Pindahkan ke sini agar hanya muncul saat error
+    }
+};
 </script>
 
 <template>
-    <v-row class="d-flex mb-3">
-        <v-col cols="12">
-            <v-label class="font-weight-semibold mb-1">Name</v-label>
-            <v-text-field variant="outlined" density="compact" hide-details color="primary"></v-text-field>
-        </v-col>
-        <v-col cols="12">
-            <v-label class="font-weight-semibold mb-1">Email Address</v-label>
-            <v-text-field variant="outlined" density="compact" type="email" hide-details color="primary"></v-text-field>
-        </v-col>
-        <v-col cols="12">
-            <v-label class="font-weight-semibold mb-1">Password</v-label>
-            <v-text-field variant="outlined" type="password" density="compact"  hide-details color="primary"></v-text-field>
-        </v-col>
-        <v-col cols="12" >
-            <v-btn to="/" rounded="md" color="primary" size="large" block   flat>Sign up</v-btn>
-        </v-col>
-    </v-row>
+    <!-- Snackbar untuk menampilkan pesan -->
+    <v-snackbar
+        v-model="showMessage"
+        :color="SnackbarColor"
+        timeout="3000"
+        location="top"
+    >
+        {{ responseMessage }}
+        <template v-slot:actions>
+            <v-btn color="white" @click="showMessage = false">Close</v-btn>
+        </template>
+    </v-snackbar>
+
+    <!-- Register Form -->
+    <v-form ref="form" @submit.prevent="register">
+        <v-row class="d-flex mb-3">
+            <v-col cols="12">
+                <v-label class="font-weight-semibold mb-1">Name</v-label>
+                <v-text-field
+                    v-model="name"
+                    hide-details="auto"
+                    variant="outlined"
+                    density="compact"
+                    color="primary"
+                    :rules="[v => !!v || 'Name is required']"
+                ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+                <v-label class="font-weight-semibold mb-1">Email Address</v-label>
+                <v-text-field
+                    v-model="email"
+                    variant="outlined"
+                    density="compact"
+                    type="email"
+                    hide-details="auto"
+                    color="primary"
+                    :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'Invalid email']"
+                ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+                <v-label class="font-weight-semibold mb-1">Password</v-label>
+                <v-text-field
+                    v-model="password"
+                    variant="outlined"
+                    type="password"
+                    density="compact"
+                    hide-details="auto"
+                    color="primary"
+                    :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Min 6 characters']"
+                ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+                <v-btn type="submit" rounded="md" color="primary" size="large" block flat>Sign up</v-btn>
+            </v-col>
+        </v-row>
+    </v-form>
 </template>
