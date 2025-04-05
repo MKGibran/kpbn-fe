@@ -1,5 +1,8 @@
 <script setup>
 import { Icon } from '@iconify/vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 const props = defineProps({ item: Object, level: Number });
 </script>
 
@@ -10,6 +13,7 @@ const props = defineProps({ item: Object, level: Number });
         :href="item.type === 'external' ? item.to : ''"
         rounded
         class="mb-1"
+        :class="{ 'active-menu': route.path === item.to }"
         :disabled="item.disabled"
         :target="item.type === 'external' ? '_blank' : ''">
         <!---If icon-->
@@ -35,3 +39,12 @@ const props = defineProps({ item: Object, level: Number });
         </template>
     </v-list-item>
 </template>
+
+<style scoped>
+.active-menu {
+    background-color: #e3f2fd; /* Warna biru muda */
+    font-weight: bold;
+    border-radius: 8px;
+}
+</style>
+

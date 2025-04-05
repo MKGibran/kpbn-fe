@@ -33,16 +33,16 @@ const sidebarItem: menu[] = [
         icon: 'cloud-upload-broken',
         to: '/upload-data'
     },
-    // {
-    //     title: 'Settings',
-    //     icon: 'settings-linear',
-    //     to: '/settings'
-    // },
     {
-        title: 'Logout',
-        icon: 'logout-3-line-duotone',
-        to: '/logout'
+        title: 'Settings',
+        icon: 'settings-linear',
+        to: '/settings'
     },
+    // {
+    //     title: 'Logout',
+    //     icon: 'logout-3-line-duotone',
+    //     to: '/logout'
+    // },
 ];
 
 export default sidebarItem;

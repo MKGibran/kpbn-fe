@@ -13,7 +13,7 @@ import LoginForm from '@/components/auth/LoginForm.vue';
                         <v-card-item class="pa-sm-8">
                             <div class="d-flex justify-center py-4">
                                 <!-- <Logo /> -->
-                                 <h2>Logo</h2>
+                                <h2>Logo</h2>
                             </div>
                             <div class="text-body-1 text-muted text-center mb-3">Dashboard KPBN</div>
                             <LoginForm />
