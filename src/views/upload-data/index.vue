@@ -36,17 +36,17 @@ const uploadData = async () => {
     formData.append('dataset', selectedFile.value);
 
     try {
-        const response = await axios.post('http://127.0.0.1:5000/dataset/uploads', formData, {
+        const response = await axios.post('http://103.41.204.232:81/dataset/uploads', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}` // Tambahkan token ke header
+                Authorization: `Bearer ${token}` // Tambahkan token ke header
             }
         });
         console.log('File Uploaded:', response.data);
 
         snackbarText.value = 'Upload successful!';
         snackbar.value = true;
-        SnackbarColor.value = 'success';
+        SnackbarColor.value = 'primary';
     } catch (error) {
         console.error('Upload Failed:', error);
 
@@ -58,40 +58,45 @@ const uploadData = async () => {
 </script>
 
 <template>
-    <v-container>
-        <!-- Snackbar untuk menampilkan error -->
-        <v-snackbar v-model="snackbar" :color="SnackbarColor" timeout="3000" location="top">
-            {{ snackbarText }}
-            <template v-slot:actions>
-                <v-btn color="white" text @click="snackbar = false">Close</v-btn>
-            </template>
-        </v-snackbar>
-        <!-- KPBN -->
-        <v-card elevation="10" class="pa-5 mb-5">
-            <v-card-title class="text-h6 font-weight-bold">Upload Data</v-card-title>
-            <v-card-text>
-                <v-row align="center">
-                    <!-- Input File -->
-                    <v-col cols="10">
-                        <v-file-input @change="onFileChange" label="Upload Files" prepend-inner-icon="mdi-magnify" variant="outlined" hide-details></v-file-input>
-                    </v-col>
+    <!-- Snackbar untuk menampilkan error -->
+    <v-snackbar v-model="snackbar" :color="SnackbarColor" timeout="3000" location="top">
+        {{ snackbarText }}
+        <template v-slot:actions>
+            <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+        </template>
+    </v-snackbar>
+    <!-- KPBN -->
+    <v-card elevation="10" class="pa-5 mb-5">
+        <v-card-title class="text-h6 font-weight-bold">Upload Data</v-card-title>
+        <v-card-text>
+            <v-row align="center">
+                <!-- Input File -->
+                <v-col cols="10">
+                    <v-file-input
+                        @change="onFileChange"
+                        label="Upload Files"
+                        prepend-inner-icon="mdi-magnify"
+                        variant="outlined"
+                        hide-details
+                    ></v-file-input>
+                </v-col>
 
-                    <!-- Tombol Upload -->
-                    <v-col cols="2" class="text-right">
-                        <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-7" size="large" flat>Upload</v-btn>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12">
-                        <a href="/template-xlsx/Data-Input.xlsx" download>
-                            <v-btn rounded="md" color="white" class="bg-primary px-7" size="large" flat>Download Template</v-btn>
-                        </a>
-                    </v-col>
-                </v-row>
-            </v-card-text>
-        </v-card>
-        <!-- MDEX -->
-        <!-- <v-card elevation="10" class="pa-5 mb-5">
+                <!-- Tombol Upload -->
+                <v-col cols="2" class="text-right">
+                    <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-7" size="large" flat>Upload</v-btn>
+                </v-col>
+            </v-row>
+            <v-row>
+                <v-col cols="12">
+                    <a href="/template-xlsx/Data-Input.xlsx" download>
+                        <v-btn rounded="md" color="white" class="bg-warning px-7" size="large" flat>Download Template</v-btn>
+                    </a>
+                </v-col>
+            </v-row>
+        </v-card-text>
+    </v-card>
+    <!-- MDEX -->
+    <!-- <v-card elevation="10" class="pa-5 mb-5">
             <v-card-title class="text-h6 font-weight-bold">MDEX</v-card-title>
             <v-card-text>
                 <v-file-input
@@ -104,8 +109,8 @@ const uploadData = async () => {
                 <v-btn rounded="md" color="white" class="bg-primary px-7" size="large" flat>Download Template</v-btn>
             </v-card-text>
         </v-card> -->
-        <!-- SOYOIL -->
-        <!-- <v-card elevation="10" class="pa-5 mb-5">
+    <!-- SOYOIL -->
+    <!-- <v-card elevation="10" class="pa-5 mb-5">
             <v-card-title class="text-h6 font-weight-bold">SOYOIL</v-card-title>
             <v-card-text>
                 <v-file-input
@@ -118,7 +123,9 @@ const uploadData = async () => {
                 <v-btn rounded="md" color="white" class="bg-primary px-7" size="large" flat>Download Template</v-btn>
             </v-card-text>
         </v-card> -->
-    </v-container>
+        <v-col class="text-center text-center mt-2 mb-0">
+            <p class="text-muted">KPBN</p>
+        </v-col>
 </template>
 
 <style scoped>

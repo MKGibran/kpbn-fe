@@ -19,7 +19,7 @@ const register = async () => {
 
     try {
         const response = await axios.post(
-            'http://127.0.0.1:5000/user/register',
+            'http://103.41.204.232:81/user/register',
             new URLSearchParams({
                 name: name.value,
                 email: email.value,

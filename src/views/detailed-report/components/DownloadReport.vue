@@ -4,7 +4,7 @@ import { ref, computed } from 'vue';
 import { tableActionData } from '@/data/Dashboard';
 </script>
 <template>
-    <v-card elevation="10" class="bg-light">
+    <v-card elevation="10" class="bg-warning">
         <v-card-item>
             <div class="d-flex justify-space-between align-center mb-mb-0 mb-3">
                 <div class="d-flex ga-3 align-center">
