@@ -7,6 +7,7 @@ import PriceTrends from '../dashboard/components/PriceTrends.vue';
 import MonthlyPrice from '../dashboard/components/MonthlyPrice.vue';
 import QuarterlyPrice from '../dashboard/components/QuarterlyPrice.vue';
 import YearlyPrice from '../dashboard/components/YearlyPrice.vue';
+import { fi } from 'date-fns/locale';
 
 // Data untuk chart Harga terhadap waktu
 const yAxisPriceTitle = 'Price';
@@ -27,6 +28,8 @@ const monthlyVolumeX = ref([]);
 const chartSeriesDailyVolume = ref([]);
 const chartSeriesWeeklyVolume = ref([]);
 const chartSeriesMonthlyVolume = ref([]);
+
+const loading = ref(true); // Loading
 
 onMounted(async () => {
     try {
@@ -62,7 +65,7 @@ onMounted(async () => {
 
         dailyPriceX.value = dailyCategories;
         chartSeriesDailyPrice.value = [
-            { name: 'KPBn', data: dailySeries.kpbn },
+            { name: 'KPBN', data: dailySeries.kpbn },
             { name: 'MDEX C1', data: dailySeries.mdexC1 },
             { name: 'MDEX C3', data: dailySeries.mdexC3 },
             { name: 'Rotterdam', data: dailySeries.rotterdam }
@@ -117,7 +120,7 @@ onMounted(async () => {
 
         weeklyPriceX.value = weeklyCategories;
         chartSeriesWeeklyPrice.value = [
-            { name: 'KPBn', data: weeklySeries.kpbn },
+            { name: 'KPBN', data: weeklySeries.kpbn },
             { name: 'MDEX C1', data: weeklySeries.mdexC1 },
             { name: 'MDEX C3', data: weeklySeries.mdexC3 },
             { name: 'Rotterdam', data: weeklySeries.rotterdam }
@@ -159,13 +162,15 @@ onMounted(async () => {
 
         monthlyPriceX.value = monthlyCategories;
         chartSeriesMonthlyPrice.value = [
-            { name: 'KPBn', data: monthlySeries.kpbn },
+            { name: 'KPBN', data: monthlySeries.kpbn },
             { name: 'MDEX C1', data: monthlySeries.mdexC1 },
             { name: 'MDEX C3', data: monthlySeries.mdexC3 },
             { name: 'Rotterdam', data: monthlySeries.rotterdam }
         ];
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
+    } finally {
+        loading.value = false;
     }
 });
 
@@ -254,21 +259,31 @@ function groupByMonth(data: any[]) {
                 </v-col>
             </v-row>
             <v-col cols="12" md="12">
-                <PriceTrends
-                    title="Price Trend & Chart"
-                    :yAxisTitle="yAxisPriceTitle"
-                    :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
-                    :chartSeries="{ daily: chartSeriesDailyPrice, weekly: chartSeriesWeeklyPrice, monthly: chartSeriesMonthlyPrice }"
-                />
+                <div v-if="loading">
+                    <v-skeleton-loader type="article" />
+                </div>
+                <div v-else>
+                    <PriceTrends
+                        title="Price Trend & Chart"
+                        :yAxisTitle="yAxisPriceTitle"
+                        :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
+                        :chartSeries="{ daily: chartSeriesDailyPrice, weekly: chartSeriesWeeklyPrice, monthly: chartSeriesMonthlyPrice }"
+                    />
+                </div>
             </v-col>
 
             <v-col cols="12" md="12">
-                <PriceTrends
-                    title="Volume Trend & Chart"
-                    :yAxisTitle="yAxisVolumeTitle"
-                    :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
-                    :chartSeries="{ daily: chartSeriesDailyVolume, weekly: chartSeriesWeeklyVolume, monthly: chartSeriesMonthlyVolume }"
-                />
+                <div v-if="loading">
+                    <v-skeleton-loader type="article" />
+                </div>
+                <div v-else>
+                    <PriceTrends
+                        title="Volume Trend & Chart"
+                        :yAxisTitle="yAxisVolumeTitle"
+                        :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
+                        :chartSeries="{ daily: chartSeriesDailyVolume, weekly: chartSeriesWeeklyVolume, monthly: chartSeriesMonthlyVolume }"
+                    />
+                </div>
             </v-col>
             <v-col class="text-center text-center mt-2 mb-0">
                 <p class="text-muted">KPBN</p>
