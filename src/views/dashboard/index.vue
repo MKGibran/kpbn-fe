@@ -8,19 +8,21 @@ import MonthlyPrice from '../dashboard/components/MonthlyPrice.vue';
 import QuarterlyPrice from '../dashboard/components/QuarterlyPrice.vue';
 import YearlyPrice from '../dashboard/components/YearlyPrice.vue';
 import { fi } from 'date-fns/locale';
+import { useDisplay } from 'vuetify';
 
+const { mobile } = useDisplay();
 // Data untuk chart Harga terhadap waktu
 const yAxisPriceTitle = 'Price';
 
 // Data untuk chart Volume terhadap Waktu
 const yAxisVolumeTitle = 'Volume';
 
-const dailyPriceX = ref([]);
-const weeklyPriceX = ref([]);
-const monthlyPriceX = ref([]);
-const chartSeriesDailyPrice = ref([]);
-const chartSeriesWeeklyPrice = ref([]);
-const chartSeriesMonthlyPrice = ref([]);
+const dailyPriceX = ref<string[]>([]);
+const weeklyPriceX = ref<string[]>([]);
+const monthlyPriceX = ref<string[]>([]);
+const chartSeriesDailyPrice = ref<{ name: string; data: number[] }[]>([]);
+const chartSeriesWeeklyPrice = ref<{ name: string; data: number[] }[]>([]);
+const chartSeriesMonthlyPrice = ref<{ name: string; data: number[] }[]>([]);
 
 const dailyVolumeX = ref([]);
 const weeklyVolumeX = ref([]);
@@ -45,7 +47,7 @@ onMounted(async () => {
 
         // Daily: ambil 30 data terakhir
         const last30 = rawData.slice(-30);
-        last30.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        last30.sort((a: { date: string }, b: { date: string }) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const dailyCategories: string[] = [];
         const dailySeries = {
@@ -57,10 +59,10 @@ onMounted(async () => {
 
         last30.forEach((entry: any) => {
             dailyCategories.push(formatDate(entry.date));
-            dailySeries.kpbn.push(parseFloat(entry.kpbn));
-            dailySeries.mdexC1.push(parseFloat(entry.mdex_c1));
-            dailySeries.mdexC3.push(parseFloat(entry.mdex_c3));
-            dailySeries.rotterdam.push(parseFloat(entry.rotterdam));
+            dailySeries.kpbn.push(Number(parseFloat(entry.kpbn).toFixed(2)));
+            dailySeries.mdexC1.push(Number(parseFloat(entry.mdex_c1).toFixed(2)));
+            dailySeries.mdexC3.push(Number(parseFloat(entry.mdex_c3).toFixed(2)));
+            dailySeries.rotterdam.push(Number(parseFloat(entry.rotterdam).toFixed(2)));
         });
 
         dailyPriceX.value = dailyCategories;
@@ -72,9 +74,8 @@ onMounted(async () => {
         ];
 
         // Weekly
-        // Weekly - hanya ambil bulan terakhir
         const lastEntryDate = new Date(rawData[rawData.length - 1].date);
-        const targetMonth = lastEntryDate.getMonth(); // 0-11
+        const targetMonth = lastEntryDate.getMonth();
         const targetYear = lastEntryDate.getFullYear();
 
         const filteredWeekly = rawData.filter((entry: any) => {
@@ -83,14 +84,12 @@ onMounted(async () => {
         });
 
         const groupedWeekly: Record<string, any[]> = {};
-
         filteredWeekly.forEach((entry: any) => {
             const date = new Date(entry.date);
             const weekNumber = Math.ceil(date.getDate() / 7);
             const monthName = date.toLocaleString('default', { month: 'short' });
             const year = date.getFullYear();
             const key = `Week ${weekNumber} - ${monthName} ${year}`;
-
             if (!groupedWeekly[key]) groupedWeekly[key] = [];
             groupedWeekly[key].push(entry);
         });
@@ -110,7 +109,8 @@ onMounted(async () => {
 
         weeklyCategories.forEach((key) => {
             const group = groupedWeekly[key];
-            const avg = (key: keyof (typeof group)[0]) => group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length;
+            const avg = (key: keyof (typeof group)[0]) =>
+                Number((group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length).toFixed(2));
 
             weeklySeries.kpbn.push(avg('kpbn'));
             weeklySeries.mdexC1.push(avg('mdex_c1'));
@@ -152,7 +152,8 @@ onMounted(async () => {
 
         monthlyCategories.forEach((key) => {
             const group = groupedMonthly[key];
-            const avg = (key: keyof (typeof group)[0]) => group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length;
+            const avg = (key: keyof (typeof group)[0]) =>
+                Number((group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length).toFixed(2));
 
             monthlySeries.kpbn.push(avg('kpbn'));
             monthlySeries.mdexC1.push(avg('mdex_c1'));
@@ -242,52 +243,102 @@ function groupByMonth(data: any[]) {
 
 <template>
     <div>
-        <v-row class="center mb-5">
+        <div class="center mb-5">
             <h3 class="font-weight-bold">Historical Price Trends and Forecast</h3>
             <span class="text-textSecondary text-sm ml-2">(IDR/kg)</span>
-        </v-row>
-        <v-row>
-            <v-row>
-                <v-col cols="12" md="4">
-                    <MonthlyPrice />
-                </v-col>
-                <v-col cols="12" md="4">
-                    <QuarterlyPrice />
-                </v-col>
-                <v-col cols="12" md="4">
-                    <YearlyPrice />
-                </v-col>
-            </v-row>
-            <v-col cols="12" md="12">
-                <div v-if="loading">
-                    <v-skeleton-loader type="article" />
-                </div>
-                <div v-else>
-                    <PriceTrends
-                        title="Price Trend & Chart"
-                        :yAxisTitle="yAxisPriceTitle"
-                        :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
-                        :chartSeries="{ daily: chartSeriesDailyPrice, weekly: chartSeriesWeeklyPrice, monthly: chartSeriesMonthlyPrice }"
-                    />
-                </div>
-            </v-col>
+        </div>
+        <div>
+            <div v-if="!mobile">
+                <v-row>
+                    <v-col class="min-card" cols="12" md="4">
+                        <MonthlyPrice />
+                    </v-col>
+                    <v-col class="min-card" cols="12" md="4">
+                        <QuarterlyPrice />
+                    </v-col>
+                    <v-col class="min-card" cols="12" md="4">
+                        <YearlyPrice />
+                    </v-col>
+                </v-row>
+            </div>
 
-            <v-col cols="12" md="12">
-                <div v-if="loading">
-                    <v-skeleton-loader type="article" />
-                </div>
-                <div v-else>
-                    <PriceTrends
-                        title="Volume Trend & Chart"
-                        :yAxisTitle="yAxisVolumeTitle"
-                        :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
-                        :chartSeries="{ daily: chartSeriesDailyVolume, weekly: chartSeriesWeeklyVolume, monthly: chartSeriesMonthlyVolume }"
-                    />
-                </div>
-            </v-col>
-            <v-col class="text-center text-center mt-2 mb-0">
-                <p class="text-muted">KPBN</p>
-            </v-col>
-        </v-row>
+            <div v-else class="scroll-wrapper">
+                <v-row class="flex-nowrap" gutters>
+                    <v-col class="min-card" cols="12" md="4">
+                        <MonthlyPrice />
+                    </v-col>
+                    <v-col class="min-card" cols="12" md="4">
+                        <QuarterlyPrice />
+                    </v-col>
+                    <v-col class="min-card" cols="12" md="4">
+                        <YearlyPrice />
+                    </v-col>
+                </v-row>
+            </div>
+
+            <div>
+                <v-row>
+                    <v-col cols="12" md="12">
+                        <div v-if="loading">
+                            <v-skeleton-loader type="article" />
+                        </div>
+                        <div v-else>
+                            <PriceTrends
+                                title="Price Trend & Chart"
+                                :yAxisTitle="yAxisPriceTitle"
+                                :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
+                                :chartSeries="{
+                                    daily: chartSeriesDailyPrice,
+                                    weekly: chartSeriesWeeklyPrice,
+                                    monthly: chartSeriesMonthlyPrice
+                                }"
+                            />
+                        </div>
+                    </v-col>
+                </v-row>
+            </div>
+
+            <div>
+                <v-row>
+                    <v-col cols="12" md="12">
+                        <div v-if="loading">
+                            <v-skeleton-loader type="article" />
+                        </div>
+                        <div v-else>
+                            <PriceTrends
+                                title="Volume Trend & Chart"
+                                :yAxisTitle="yAxisVolumeTitle"
+                                :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
+                                :chartSeries="{
+                                    daily: chartSeriesDailyVolume,
+                                    weekly: chartSeriesWeeklyVolume,
+                                    monthly: chartSeriesMonthlyVolume
+                                }"
+                            />
+                        </div>
+                    </v-col>
+                </v-row>
+            </div>
+
+            <!-- Footer -->
+            <div>
+                <v-col v-if="!mobile" class="text-center text-center mt-2 mb-0">
+                    <p class="text-muted">KPBN</p>
+                </v-col>
+            </div>
+        </div>
     </div>
 </template>
+
+<style scoped>
+.scroll-wrapper {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 1rem;
+}
+
+.min-card {
+    min-width: 250px;
+    flex: 0 0 auto;
+}
+</style>

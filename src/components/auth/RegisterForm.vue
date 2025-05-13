@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
+import { VForm } from 'vuetify/components';
 
-const form = ref(null);
+const form = ref<VForm | null>(null);
 const name = ref('');
 const email = ref('');
 const password = ref('');
@@ -32,8 +33,7 @@ const register = async () => {
         responseMessage.value = response.data.message || 'User Added Successfully';
         SnackbarColor.value = 'success';
         showMessage.value = true; // Pindahkan ke sini agar hanya muncul saat berhasil
-    } catch (error) {
-        console.error('Error:', error);
+    } catch (error: any) {
         responseMessage.value = error.response?.data?.message || 'An error occurred';
         SnackbarColor.value = 'error';
         showMessage.value = true; // Pindahkan ke sini agar hanya muncul saat error
@@ -43,12 +43,7 @@ const register = async () => {
 
 <template>
     <!-- Snackbar untuk menampilkan pesan -->
-    <v-snackbar
-        v-model="showMessage"
-        :color="SnackbarColor"
-        timeout="3000"
-        location="top"
-    >
+    <v-snackbar v-model="showMessage" :color="SnackbarColor" timeout="3000" location="top">
         {{ responseMessage }}
         <template v-slot:actions>
             <v-btn color="white" @click="showMessage = false">Close</v-btn>
@@ -66,7 +61,7 @@ const register = async () => {
                     variant="outlined"
                     density="compact"
                     color="primary"
-                    :rules="[v => !!v || 'Name is required']"
+                    :rules="[(v: any) => !!v || 'Name is required']"
                 ></v-text-field>
             </v-col>
             <v-col cols="12">
@@ -78,7 +73,7 @@ const register = async () => {
                     type="email"
                     hide-details="auto"
                     color="primary"
-                    :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'Invalid email']"
+                    :rules="[(v: any) => !!v || 'Email is required', (v: string) => /.+@.+\..+/.test(v) || 'Invalid email']"
                 ></v-text-field>
             </v-col>
             <v-col cols="12">
@@ -90,7 +85,7 @@ const register = async () => {
                     density="compact"
                     hide-details="auto"
                     color="primary"
-                    :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Min 6 characters']"
+                    :rules="[(v: string) => !!v || 'Password is required', (v: string) => v.length >= 6 || 'Min 6 characters']"
                 ></v-text-field>
             </v-col>
             <v-col cols="12">

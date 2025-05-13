@@ -2,8 +2,9 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { VForm } from 'vuetify/components'
 
-const form = ref(null);
+const form = ref<VForm | null>(null);
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
@@ -26,9 +27,9 @@ const login = async () => {
         localStorage.setItem('access_token', response.data.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.data.user));
         router.push('/dashboard');
-    } catch (error) {
-        console.error('Error:', error);
-        errorMessage.value = error.response?.data?.message || 'Invalid email or password.';
+    } catch (error: any) {
+        errorMessage.value = error;
+        // errorMessage.value = error.response?.data?.message || 'Invalid email or password.';
         showError.value = true;
     }
 };
@@ -39,7 +40,7 @@ const login = async () => {
     <v-snackbar v-model="showError" color="error" timeout="3000" location="top">
         {{ errorMessage }}
         <template v-slot:actions>
-            <v-btn color="white" text @click="showError = false">Close</v-btn>
+            <v-btn color="white" variant="text" @click="showError = false">Close</v-btn>
         </template>
     </v-snackbar>
 
@@ -56,8 +57,8 @@ const login = async () => {
                     color="primary"
                     type="email"
                     :rules="[
-                        (v) => !!v || 'Email is required',
-                        (v) => /.+@.+\..+/.test(v) || 'Invalid email format'
+                        (v: any) => !!v || 'Email is required',
+                        (v: string) => /.+@.+\..+/.test(v) || 'Invalid email format'
                     ]"
                 ></v-text-field>
             </v-col>
@@ -70,7 +71,7 @@ const login = async () => {
                     type="password"
                     hide-details="auto"
                     color="primary"
-                    :rules="[(v) => !!v || 'Password is required']"
+                    :rules="[(v: any) => !!v || 'Password is required']"
                 ></v-text-field>
             </v-col>
             <v-col cols="12" class="pt-0">

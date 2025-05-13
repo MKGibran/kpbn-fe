@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted="true">
+    <!-- Ganti dengan IP server kamu -->
+    <domain includeSubdomains="true">103.41.204.232:81</domain>
+  </domain-config>
+</network-security-config>

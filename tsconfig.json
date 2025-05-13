@@ -4,12 +4,14 @@
   "compilerOptions": {
     "preserveValueImports": false,
     "importsNotUsedAsValues": "remove",
-    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "baseUrl": ".",
+    "noImplicitAny": false,
     "paths": {
       "@/*": ["./src/*"]
     },
-    "allowJs": true
+    "allowJs": true,
+    "lib": ["ES2020", "DOM"]
   },
   "references": [
     {

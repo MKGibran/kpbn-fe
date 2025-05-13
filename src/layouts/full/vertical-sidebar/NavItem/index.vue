@@ -18,9 +18,9 @@ const props = defineProps({ item: Object, level: Number });
         :target="item.type === 'external' ? '_blank' : ''">
         <!---If icon-->
         <template v-slot:prepend>
-            <Icon :icon="'solar:' + item.icon" height="18" width="18" :level="level" class="dot" :class="'text-' + item.BgColor"/>
+            <Icon :icon="item.icon" height="18" width="18" :level="level" class="dot" :class="'text-' + item.BgColor"/>
         </template>
-        <v-list-item-title>{{item.title}}</v-list-item-title>
+        <v-list-item-title class="mx-2">{{item.title}}</v-list-item-title>
         <!---If Caption-->
         <v-list-item-subtitle v-if="item.subCaption" class="text-caption mt-n1 hide-menu">
             {{ item.subCaption }}
@@ -42,7 +42,7 @@ const props = defineProps({ item: Object, level: Number });
 
 <style scoped>
 .active-menu {
-    background-color: #e3f2fd; /* Warna biru muda */
+    background-color: #7ddaffee; /* Warna biru muda */
     font-weight: bold;
     border-radius: 8px;
 }

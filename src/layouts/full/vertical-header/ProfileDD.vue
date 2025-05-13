@@ -45,7 +45,7 @@ const logout = async () => {
 
 <template>
     <!-- Snackbar untuk menampilkan pesan -->
-    <v-snackbar v-model="showMessage" color="success" timeout="3000" location="top">
+    <v-snackbar v-model="showMessage" color="primary" timeout="3000" location="top">
         Logout Succeed
         <template v-slot:actions>
             <v-btn color="white" @click="showMessage = false">Tutup</v-btn>
@@ -62,14 +62,14 @@ const logout = async () => {
             </v-btn>
         </template>
         <v-sheet rounded="md" width="200" elevation="10" class="mt-2">
-            <v-list class="py-0" lines="one" density="compact">
+            <!-- <v-list class="py-0" lines="one" density="compact">
                 <v-list-item value="account" color="primary">
                     <template v-slot:prepend>
                         <MailIcon stroke-width="1.5" size="20" />
                     </template>
                     <v-list-item-title class="pl-4 text-body-1">My Account</v-list-item-title>
                 </v-list-item>
-            </v-list>
+            </v-list> -->
             <div class="pt-4 pb-4 px-5 text-center">
                 <v-btn @click="logout" color="primary" variant="outlined" block>Logout</v-btn>
             </div>

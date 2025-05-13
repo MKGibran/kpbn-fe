@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /*Call Components*/
 import { ref } from 'vue';
+import { useDisplay } from 'vuetify';
 
+const { mobile } = useDisplay();
 const settings = ref({
     algorithm: 'LSTM',
     currency: 'USD',
@@ -28,7 +30,7 @@ function saveSettings() {
     <v-snackbar v-model="snackbar" :color="SnackbarColor" timeout="3000" location="top">
         {{ snackbarText }}
         <template v-slot:actions>
-            <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+            <v-btn color="white" variant="text" @click="snackbar = false">Close</v-btn>
         </template>
     </v-snackbar>
     <div>
@@ -69,17 +71,23 @@ function saveSettings() {
                     </v-col>
                 </v-row>
                 <!-- Button -->
-                <v-row>
-                    <v-col cols="12" class="d-flex justify-end mt-4">
-                        <v-btn rounded="md" color="white" class="bg-primary px-7 mx-2" size="large" flat @click="saveSettings"
-                            >Save Settings</v-btn
-                        >
-                        <v-btn rounded="md" color="white" class="bg-warning px-7 mx-2" size="large" flat @click="saveSettings">Retrain Model</v-btn>
+                <v-row class="flex-nowrap" gutters>
+                    <v-col cols="12" class="d-flex justify-end flex-wrap gap-2 mt-md-4">
+                        <v-btn rounded="md" color="white" class="bg-primary px-sm-5 px-md-7 mx-1 my-1" size="large" flat @click="saveSettings">
+                            Save Settings
+                        </v-btn>
+
+                        <v-btn rounded="md" color="white" class="bg-warning px-sm-5 px-md-7 mx-1 my-1" size="large" flat @click="saveSettings">
+                            Retrain Model
+                        </v-btn>
                     </v-col>
                 </v-row>
             </v-container>
         </v-card>
-        <v-col class="text-center text-center mt-2 mb-0">
+    </div>
+    <!-- Footer -->
+    <div>
+        <v-col v-if="!mobile" class="text-center text-center mt-2 mb-0">
             <p class="text-muted">KPBN</p>
         </v-col>
     </div>

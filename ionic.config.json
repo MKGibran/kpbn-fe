@@ -1,0 +1,7 @@
+{
+  "name": "kpbn",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}

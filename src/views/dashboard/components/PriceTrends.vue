@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import { useDisplay } from 'vuetify';
 
+const { mobile } = useDisplay();
 // Definisi props
 const props = defineProps<{
   title: string;
@@ -27,12 +29,12 @@ const chartOptions = computed(() => ({
   chart: {
     type: 'line',
     height: 350,
-    toolbar: { show: true },
+    toolbar: { show: !mobile.value },
     zoom: { enabled: true },
     id: 'main-chart'
   },
   colors: ['#008FFB', '#FF8C42', '#4CAF50', '#FFC107'],
-  stroke: { width: 2, curve: 'smooth' },
+  stroke: { width: 2, curve: 'straight' },
   markers: { size: 5 },
   xaxis: { categories: filteredXAxisCategories.value },
   yaxis: { title: { text: props.yAxisTitle } },

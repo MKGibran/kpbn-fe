@@ -17,32 +17,26 @@ export interface menu {
 }
 
 const sidebarItem: menu[] = [
-
     {
         title: 'Dashboard',
-        icon: 'widget-add-line-duotone',
+        icon: 'solar:widget-add-line-duotone',
         to: '/'
     },
     {
         title: 'Detailed Report',
-        icon: 'document-add-outline',
+        icon: 'solar:document-add-outline',
         to: '/detailed-report'
     },
     {
         title: 'Upload Data',
-        icon: 'cloud-upload-broken',
+        icon: 'solar:cloud-upload-broken',
         to: '/upload-data'
     },
     {
         title: 'Settings',
-        icon: 'settings-linear',
+        icon: 'solar:settings-linear',
         to: '/settings'
     },
-    // {
-    //     title: 'Logout',
-    //     icon: 'logout-3-line-duotone',
-    //     to: '/logout'
-    // },
 ];
 
 export default sidebarItem;

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
+import { useDisplay } from 'vuetify';
 
+const { mobile } = useDisplay();
 const selectedFile = ref<File | null>(null);
 const snackbar = ref(false);
 const snackbarText = ref('');
@@ -62,70 +64,77 @@ const uploadData = async () => {
     <v-snackbar v-model="snackbar" :color="SnackbarColor" timeout="3000" location="top">
         {{ snackbarText }}
         <template v-slot:actions>
-            <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+            <v-btn color="white" variant="text" @click="snackbar = false">Close</v-btn>
         </template>
     </v-snackbar>
-    <!-- KPBN -->
-    <v-card elevation="10" class="pa-5 mb-5">
-        <v-card-title class="text-h6 font-weight-bold">Upload Data</v-card-title>
-        <v-card-text>
-            <v-row align="center">
-                <!-- Input File -->
-                <v-col cols="10">
-                    <v-file-input
-                        @change="onFileChange"
-                        label="Upload Files"
-                        prepend-inner-icon="mdi-magnify"
-                        variant="outlined"
-                        hide-details
-                    ></v-file-input>
-                </v-col>
 
-                <!-- Tombol Upload -->
-                <v-col cols="2" class="text-right">
-                    <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-7" size="large" flat>Upload</v-btn>
-                </v-col>
-            </v-row>
-            <v-row>
-                <v-col cols="12">
-                    <a href="/template-xlsx/Data-Input.xlsx" download>
-                        <v-btn rounded="md" color="white" class="bg-warning px-7" size="large" flat>Download Template</v-btn>
-                    </a>
-                </v-col>
-            </v-row>
-        </v-card-text>
-    </v-card>
-    <!-- MDEX -->
-    <!-- <v-card elevation="10" class="pa-5 mb-5">
-            <v-card-title class="text-h6 font-weight-bold">MDEX</v-card-title>
+    <!-- Upload Data -->
+    <div>
+        <v-card elevation="10" class="px-2 py-5 mb-5">
+            <v-card-title class="text-h6 font-weight-bold">Upload Data</v-card-title>
             <v-card-text>
-                <v-file-input
-                label="Upload Files"
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                hide-details
-                class="mb-5"
-                ></v-file-input>
-                <v-btn rounded="md" color="white" class="bg-primary px-7" size="large" flat>Download Template</v-btn>
+                <v-row align="center">
+                    <!-- Input File -->
+                    <v-col cols="12" class="d-flex flex-wrap gap-2">
+                        <v-file-input
+                            @change="onFileChange"
+                            label="Upload Files"
+                            prepend-inner-icon="mdi-magnify"
+                            variant="outlined"
+                            hide-details
+                        ></v-file-input>
+                        <!-- Tombol Upload -->
+                        <div cols="2" class="text-right mx-2">
+                            <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-sm-5 px-md-7" size="large" flat
+                                ><v-icon start>mdi-upload</v-icon>Upload</v-btn
+                            >
+                        </div>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col cols="12">
+                        <a href="/template-xlsx/Data-Input.xlsx" download>
+                            <v-btn rounded="md" color="white" class="bg-warning px-sm-5 px-md-7" size="large" flat><v-icon start>mdi-download</v-icon>Template</v-btn>
+                        </a>
+                    </v-col>
+                </v-row>
             </v-card-text>
-        </v-card> -->
-    <!-- SOYOIL -->
-    <!-- <v-card elevation="10" class="pa-5 mb-5">
-            <v-card-title class="text-h6 font-weight-bold">SOYOIL</v-card-title>
+        </v-card>
+    </div>
+
+    <!-- Upload Model -->
+    <div>
+        <v-card elevation="10" class="px-2 py-5 mb-5">
+            <v-card-title class="text-h6 font-weight-bold">Upload Model</v-card-title>
             <v-card-text>
-                <v-file-input
-                label="Upload Files"
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                hide-details
-                class="mb-5"
-                ></v-file-input>
-                <v-btn rounded="md" color="white" class="bg-primary px-7" size="large" flat>Download Template</v-btn>
+                <v-row align="center">
+                    <!-- Input File -->
+                    <v-col cols="12" class="d-flex flex-wrap gap-2">
+                        <v-file-input
+                            @change="onFileChange"
+                            label="Upload Files"
+                            prepend-inner-icon="mdi-magnify"
+                            variant="outlined"
+                            hide-details
+                        ></v-file-input>
+                        <!-- Tombol Upload -->
+                        <div cols="2" class="text-right mx-2">
+                            <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-sm-5 px-md-7" size="large" flat
+                                ><v-icon start>mdi-upload</v-icon>Upload</v-btn
+                            >
+                        </div>
+                    </v-col>
+                </v-row>
             </v-card-text>
-        </v-card> -->
-        <v-col class="text-center text-center mt-2 mb-0">
+        </v-card>
+    </div>
+
+    <!-- Footer -->
+    <div>
+        <v-col v-if="!mobile" class="text-center text-center mt-2 mb-0">
             <p class="text-muted">KPBN</p>
         </v-col>
+    </div>
 </template>
 
 <style scoped>
