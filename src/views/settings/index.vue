@@ -20,7 +20,6 @@ function saveSettings() {
     snackbarText.value = 'No Action';
     snackbar.value = true;
     SnackbarColor.value = 'primary';
-    console.log('Saved Settings:', settings.value);
     // Kirim ke backend kalau perlu
 }
 </script>

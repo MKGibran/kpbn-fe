@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import api from '@/plugins/axios';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { VForm } from 'vuetify/components'
+import { VForm } from 'vuetify/components';
 
 const form = ref<VForm | null>(null);
 const email = ref('');
@@ -18,18 +19,24 @@ const login = async () => {
     if (!valid) return; // Stop jika tidak valid
 
     try {
-        const response = await axios.post(
-            'http://103.41.204.232:81/user/login',
-            new URLSearchParams({ email: email.value, password: password.value }),
-            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        const response = await api.post(
+            '/user/login',
+            new URLSearchParams({
+                email: email.value,
+                password: password.value
+            })
         );
 
         localStorage.setItem('access_token', response.data.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.data.user));
         router.push('/dashboard');
-    } catch (error: any) {
-        errorMessage.value = error;
-        // errorMessage.value = error.response?.data?.message || 'Invalid email or password.';
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            errorMessage.value = error.response?.data?.message || 'Login gagal. Periksa koneksi atau kredensial.';
+        } else {
+            errorMessage.value = 'Terjadi kesalahan.';
+        }
+
         showError.value = true;
     }
 };
@@ -56,10 +63,7 @@ const login = async () => {
                     hide-details="auto"
                     color="primary"
                     type="email"
-                    :rules="[
-                        (v: any) => !!v || 'Email is required',
-                        (v: string) => /.+@.+\..+/.test(v) || 'Invalid email format'
-                    ]"
+                    :rules="[(v: any) => !!v || 'Email is required', (v: string) => /.+@.+\..+/.test(v) || 'Invalid email format']"
                 ></v-text-field>
             </v-col>
             <v-col cols="12">

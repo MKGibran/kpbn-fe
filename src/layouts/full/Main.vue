@@ -13,11 +13,16 @@ import { useDisplay } from 'vuetify';
 const { mobile } = useDisplay();
 const sidebarMenu = shallowRef(sidebarItems);
 const sDrawer = ref(true);
+
+// Default guest user
 const user = ref({ name: 'Guest' });
 
-const storedUser = localStorage.getItem('user');
-if (storedUser) {
-    user.value = JSON.parse(storedUser);
+// Ambil user dari localStorage
+try {
+    const storedUser = localStorage.getItem('user');
+    user.value = storedUser ? JSON.parse(storedUser) : { name: 'Guest' };
+} catch (error) {
+    user.value = { name: 'Guest' };
 }
 </script>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import api from '@/plugins/axios';
 import { useDisplay } from 'vuetify';
 
 const { mobile } = useDisplay();
@@ -18,7 +18,6 @@ const onFileChange = (event: Event) => {
 };
 
 const uploadData = async () => {
-    console.log('Selected File:', selectedFile.value);
     if (!selectedFile.value) {
         snackbarText.value = 'Please select a file';
         snackbar.value = true;
@@ -38,20 +37,17 @@ const uploadData = async () => {
     formData.append('dataset', selectedFile.value);
 
     try {
-        const response = await axios.post('http://103.41.204.232:81/dataset/uploads', formData, {
+        const response = await api.post('http://103.41.204.232:81/dataset/uploads', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}` // Tambahkan token ke header
             }
         });
-        console.log('File Uploaded:', response.data);
 
         snackbarText.value = 'Upload successful!';
         snackbar.value = true;
         SnackbarColor.value = 'primary';
     } catch (error) {
-        console.error('Upload Failed:', error);
-
         snackbarText.value = 'Upload failed!';
         snackbar.value = true;
         SnackbarColor.value = 'error';

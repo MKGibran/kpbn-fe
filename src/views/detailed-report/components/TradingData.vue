@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import axios from 'axios';
+import api from '@/plugins/axios';
+import { VDataTable } from 'vuetify/labs/VDataTable';
+
 
 const dailyTableData = ref<any[]>([]);
 const loading = ref(true);
@@ -22,34 +24,39 @@ const formatDate = (dateStr: string): string => {
 onMounted(async () => {
     try {
         const token = localStorage.getItem('access_token');
-        const res = await axios.get('http://103.41.204.232:81/dataset', {
+
+        const res = await api.get('http://103.41.204.232:81/dataset', {
             headers: {
-                'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
             }
         });
 
-        const rawData = res.data.data;
+        const rawData = res.data?.data || [];
 
-        // Ambil 30 data terakhir dan urutkan berdasarkan tanggal ASC
-        const last30 = rawData.slice(-30).sort((a: any, b: any) => {
-            return new Date(a.date).getTime() - new Date(b.date).getTime();
-        });
+        if (!Array.isArray(rawData)) {
+            dailyTableData.value = [];
+            return;
+        }
 
-        // Format untuk data tabel harian
+        const last30 = rawData
+            .slice(-30)
+            .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         dailyTableData.value = last30.map((entry: any) => ({
             date: formatDate(entry.date),
-            kpbn: Number(parseFloat(entry.kpbn).toFixed(2)),
-            mdex_c1: Number(parseFloat(entry.mdex_c1).toFixed(2)),
-            mdex_c3: Number(parseFloat(entry.mdex_c3).toFixed(2)),
-            rotterdam: Number(parseFloat(entry.rotterdam).toFixed(2))
+            kpbn: parseFloat(entry.kpbn).toFixed(2),
+            mdex_c1: parseFloat(entry.mdex_c1).toFixed(2),
+            mdex_c3: parseFloat(entry.mdex_c3).toFixed(2),
+            rotterdam: parseFloat(entry.rotterdam).toFixed(2)
         }));
-    } catch (error) {
-        console.error('Error fetching table data:', error);
+
+    } catch (error: any) {
+        console.error('❌ Error fetching table data:', error?.response?.data || error);
     } finally {
         loading.value = false;
     }
 });
+
 </script>
 
 <template>
@@ -61,13 +68,13 @@ onMounted(async () => {
                 </div>
             </div>
             <v-row class="d-flex justify-space-between">
-                <v-data-table
+                <VDataTable
                     :headers="headers"
                     :items="dailyTableData"
                     :items-per-page="5"
                     class="elevation-1"
                     :loading="loading"
-                ></v-data-table>
+                ></VDataTable>
             </v-row>
         </v-card-item>
     </v-card>

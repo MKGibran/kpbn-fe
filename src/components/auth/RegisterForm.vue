@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import api from '@/plugins/axios';
 import { VForm } from 'vuetify/components';
 
 const form = ref<VForm | null>(null);
@@ -19,7 +19,7 @@ const register = async () => {
     if (!valid) return;
 
     try {
-        const response = await axios.post(
+        const response = await api.post(
             'http://103.41.204.232:81/user/register',
             new URLSearchParams({
                 name: name.value,

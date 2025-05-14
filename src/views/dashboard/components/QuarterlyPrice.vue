@@ -8,7 +8,7 @@ import { tableActionData } from '@/data/Dashboard';
         <v-card-item>
             <div class="d-flex justify-space-between align-center mb-mb-0 mb-3">
                 <div class="d-flex ga-3 align-center">
-                    <div class="rounded-pill d-inline-flex px-4 py-2 align-center py-0 bg-warning">
+                    <div class="rounded-pill d-inline-flex px-4 py-2 mr-2 align-center py-0 bg-warning">
                         <Icon icon="solar:calendar-mark-broken" width="25" height="25" class="text-white" />
                     </div>
                     <v-card-title class="text-h6 textSecondary font-weight-medium mb-0">Quarterly Price</v-card-title>

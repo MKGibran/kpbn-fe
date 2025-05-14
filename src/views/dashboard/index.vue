@@ -2,7 +2,7 @@
 /*Call Components*/
 import { ref } from 'vue';
 import { onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/plugins/axios';
 import PriceTrends from '../dashboard/components/PriceTrends.vue';
 import MonthlyPrice from '../dashboard/components/MonthlyPrice.vue';
 import QuarterlyPrice from '../dashboard/components/QuarterlyPrice.vue';
@@ -36,7 +36,7 @@ const loading = ref(true); // Loading
 onMounted(async () => {
     try {
         const token = localStorage.getItem('access_token');
-        const res = await axios.get('http://103.41.204.232:81/dataset', {
+        const res = await api.get('http://103.41.204.232:81/dataset', {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
@@ -298,7 +298,7 @@ function groupByMonth(data: any[]) {
                 </v-row>
             </div>
 
-            <div>
+            <!-- <div>
                 <v-row>
                     <v-col cols="12" md="12">
                         <div v-if="loading">
@@ -318,7 +318,7 @@ function groupByMonth(data: any[]) {
                         </div>
                     </v-col>
                 </v-row>
-            </div>
+            </div> -->
 
             <!-- Footer -->
             <div>

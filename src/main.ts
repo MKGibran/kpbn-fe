@@ -15,3 +15,4 @@ app.use(VueTablerIcons);
 app.use(Maska);
 app.use(VueApexCharts);
 app.use(vuetify).mount('#app');
+
