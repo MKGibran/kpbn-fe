@@ -4,32 +4,26 @@ import { ref } from 'vue';
 import { onMounted } from 'vue';
 import api from '@/plugins/axios';
 import PriceTrends from '../dashboard/components/PriceTrends.vue';
-import MonthlyPrice from '../dashboard/components/MonthlyPrice.vue';
-import QuarterlyPrice from '../dashboard/components/QuarterlyPrice.vue';
-import YearlyPrice from '../dashboard/components/YearlyPrice.vue';
+import DailyPrice from '@/views/dashboard/components/DailyPrice.vue';
+import WeeklyPrice from '@/views/dashboard/components/WeeklyPrice.vue';
+import BiweeklyPrice from '@/views/dashboard/components/BiweeklyPrice.vue';
 import { fi } from 'date-fns/locale';
 import { useDisplay } from 'vuetify';
+import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
 
 const { mobile } = useDisplay();
 // Data untuk chart Harga terhadap waktu
 const yAxisPriceTitle = 'Price';
 
-// Data untuk chart Volume terhadap Waktu
-const yAxisVolumeTitle = 'Volume';
-
 const dailyPriceX = ref<string[]>([]);
 const weeklyPriceX = ref<string[]>([]);
-const monthlyPriceX = ref<string[]>([]);
+const biweeklyPriceX = ref<string[]>([]);
+const lastDailyKpbn = ref<number | null>(null);
+const lastWeeklyKpbn = ref<number | null>(null);
+const lastBiweeklyKpbn = ref<number | null>(null);
 const chartSeriesDailyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesWeeklyPrice = ref<{ name: string; data: number[] }[]>([]);
-const chartSeriesMonthlyPrice = ref<{ name: string; data: number[] }[]>([]);
-
-const dailyVolumeX = ref([]);
-const weeklyVolumeX = ref([]);
-const monthlyVolumeX = ref([]);
-const chartSeriesDailyVolume = ref([]);
-const chartSeriesWeeklyVolume = ref([]);
-const chartSeriesMonthlyVolume = ref([]);
+const chartSeriesBiweeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 
 const loading = ref(true); // Loading
 
@@ -44,6 +38,13 @@ onMounted(async () => {
         });
 
         const rawData = res.data.data;
+
+        const lastData = getLastData(rawData);
+        lastDailyKpbn.value = lastData.lastDailyKpbn;
+        lastWeeklyKpbn.value = lastData.lastWeeklyKpbn;
+        lastBiweeklyKpbn.value = lastData.lastBiweeklyKpbn;
+
+        console.log('Gibran', lastDailyKpbn.value);
 
         // Daily: ambil 30 data terakhir
         const last30 = rawData.slice(-30);
@@ -95,7 +96,7 @@ onMounted(async () => {
         });
 
         const weeklyCategories = Object.keys(groupedWeekly).sort((a, b) => {
-            const weekNumA = parseInt(a.match(/Week (\d)/)?.[1] || '0');
+            const weekNumA = parseInt(a.match(/Week (\d+)/)?.[1] || '0');
             const weekNumB = parseInt(b.match(/Week (\d)/)?.[1] || '0');
             return weekNumA - weekNumB;
         });
@@ -109,13 +110,10 @@ onMounted(async () => {
 
         weeklyCategories.forEach((key) => {
             const group = groupedWeekly[key];
-            const avg = (key: keyof (typeof group)[0]) =>
-                Number((group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length).toFixed(2));
-
-            weeklySeries.kpbn.push(avg('kpbn'));
-            weeklySeries.mdexC1.push(avg('mdex_c1'));
-            weeklySeries.mdexC3.push(avg('mdex_c3'));
-            weeklySeries.rotterdam.push(avg('rotterdam'));
+            weeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
+            weeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
+            weeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
+            weeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
         });
 
         weeklyPriceX.value = weeklyCategories;
@@ -126,47 +124,50 @@ onMounted(async () => {
             { name: 'Rotterdam', data: weeklySeries.rotterdam }
         ];
 
-        // Monthly
-        const groupedMonthly: Record<string, any[]> = {};
+        // Biweekly
+        const groupedBiweekly: Record<string, any[]> = {};
         rawData.forEach((entry: any) => {
             const date = new Date(entry.date);
-            const monthKey = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-            if (!groupedMonthly[monthKey]) groupedMonthly[monthKey] = [];
-            groupedMonthly[monthKey].push(entry);
+            const day = date.getDate();
+            const part = day <= 15 ? '1st Half' : '2nd Half';
+            const biweeklyKey = `${part} - ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+
+            if (!groupedBiweekly[biweeklyKey]) groupedBiweekly[biweeklyKey] = [];
+            groupedBiweekly[biweeklyKey].push(entry);
         });
 
-        const monthlyCategories = Object.keys(groupedMonthly).sort((a, b) => {
+        const biweeklyCategories = Object.keys(groupedBiweekly).sort((a, b) => {
             const getDate = (label: string) => {
-                const parts = label.split(' ');
-                return new Date(`${parts[0]} 01, ${parts[1]}`);
+                const match = label.match(/(1st|2nd) Half - (\w{3}) (\d{4})/);
+                if (!match) return new Date();
+                const [, half, month, year] = match;
+                const day = half === '1st' ? 1 : 16;
+                return new Date(`${month} ${day}, ${year}`);
             };
             return getDate(a).getTime() - getDate(b).getTime();
         });
 
-        const monthlySeries = {
+        const biweeklySeries = {
             kpbn: [] as number[],
             mdexC1: [] as number[],
             mdexC3: [] as number[],
             rotterdam: [] as number[]
         };
 
-        monthlyCategories.forEach((key) => {
-            const group = groupedMonthly[key];
-            const avg = (key: keyof (typeof group)[0]) =>
-                Number((group.reduce((sum, item) => sum + parseFloat(item[key]), 0) / group.length).toFixed(2));
-
-            monthlySeries.kpbn.push(avg('kpbn'));
-            monthlySeries.mdexC1.push(avg('mdex_c1'));
-            monthlySeries.mdexC3.push(avg('mdex_c3'));
-            monthlySeries.rotterdam.push(avg('rotterdam'));
+        biweeklyCategories.forEach((key) => {
+            const group = groupedBiweekly[key];
+            biweeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
+            biweeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
+            biweeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
+            biweeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
         });
 
-        monthlyPriceX.value = monthlyCategories;
-        chartSeriesMonthlyPrice.value = [
-            { name: 'KPBN', data: monthlySeries.kpbn },
-            { name: 'MDEX C1', data: monthlySeries.mdexC1 },
-            { name: 'MDEX C3', data: monthlySeries.mdexC3 },
-            { name: 'Rotterdam', data: monthlySeries.rotterdam }
+        biweeklyPriceX.value = biweeklyCategories;
+        chartSeriesBiweeklyPrice.value = [
+            { name: 'KPBN', data: biweeklySeries.kpbn },
+            { name: 'MDEX C1', data: biweeklySeries.mdexC1 },
+            { name: 'MDEX C3', data: biweeklySeries.mdexC3 },
+            { name: 'Rotterdam', data: biweeklySeries.rotterdam }
         ];
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -174,6 +175,41 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
+function getLastData(rawData: any[]) {
+    // Mengambil data KPBN terakhir untuk kategori Daily
+    const lastDailyKpbn = Number(parseFloat(rawData[rawData.length - 1].kpbn).toFixed(2));
+
+    // Mengambil data KPBN terakhir untuk kategori Weekly
+    const filteredWeekly = rawData.filter((entry) => {
+        const date = new Date(entry.date);
+        return (
+            date.getMonth() === new Date(rawData[rawData.length - 1].date).getMonth() &&
+            date.getFullYear() === new Date(rawData[rawData.length - 1].date).getFullYear()
+        );
+    });
+
+    const lastWeeklyKpbn = filteredWeekly.length ? Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2)) : null;
+
+    // Mengambil data KPBN terakhir untuk kategori Biweekly
+    const filteredBiweekly = rawData.filter((entry) => {
+        const date = new Date(entry.date);
+        return (
+            date.getMonth() === new Date(rawData[rawData.length - 1].date).getMonth() &&
+            date.getFullYear() === new Date(rawData[rawData.length - 1].date).getFullYear()
+        );
+    });
+
+    const lastBiweeklyKpbn = filteredBiweekly.length
+        ? Number(parseFloat(filteredBiweekly[filteredBiweekly.length - 1].kpbn).toFixed(2))
+        : null;
+
+    return {
+        lastDailyKpbn,
+        lastWeeklyKpbn,
+        lastBiweeklyKpbn
+    };
+}
 
 // Format tanggal
 function formatDate(dateStr: string) {
@@ -224,20 +260,20 @@ function getWeekNumber(date: Date): number {
     return Math.ceil((((d as any) - (yearStart as any)) / 86400000 + 1) / 7);
 }
 
-// Monthly
-function groupByMonth(data: any[]) {
-    const months: Record<string, any[]> = {};
+// Biweekly
+function groupByBiweek(data: any[]) {
+    const biweeks: Record<string, any[]> = {};
 
     data.forEach((entry) => {
         const date = new Date(entry.date);
-        const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-        if (!months[yearMonth]) {
-            months[yearMonth] = [];
+        const yearBiweek = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (!biweeks[yearBiweek]) {
+            biweeks[yearBiweek] = [];
         }
-        months[yearMonth].push(entry);
+        biweeks[yearBiweek].push(entry);
     });
 
-    return months;
+    return biweeks;
 }
 </script>
 
@@ -251,13 +287,13 @@ function groupByMonth(data: any[]) {
             <div v-if="!mobile">
                 <v-row>
                     <v-col class="min-card" cols="12" md="4">
-                        <MonthlyPrice />
+                        <DailyPrice :latest-price="lastDailyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <QuarterlyPrice />
+                        <WeeklyPrice :latest-price="lastWeeklyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <YearlyPrice />
+                        <BiweeklyPrice :latest-price="lastBiweeklyKpbn" />
                     </v-col>
                 </v-row>
             </div>
@@ -265,13 +301,13 @@ function groupByMonth(data: any[]) {
             <div v-else class="scroll-wrapper">
                 <v-row class="flex-nowrap" gutters>
                     <v-col class="min-card" cols="12" md="4">
-                        <MonthlyPrice />
+                        <DailyPrice :latest-price="lastDailyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <QuarterlyPrice />
+                        <WeeklyPrice :latest-price="lastWeeklyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <YearlyPrice />
+                        <BiweeklyPrice :latest-price="lastBiweeklyKpbn" />
                     </v-col>
                 </v-row>
             </div>
@@ -280,45 +316,23 @@ function groupByMonth(data: any[]) {
                 <v-row>
                     <v-col cols="12" md="12">
                         <div v-if="loading">
-                            <v-skeleton-loader type="article" />
+                            <VSkeletonLoader type="article" />
                         </div>
                         <div v-else>
                             <PriceTrends
                                 title="Price Trend & Chart"
                                 :yAxisTitle="yAxisPriceTitle"
-                                :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, monthly: monthlyPriceX }"
+                                :xAxisCategories="{ daily: dailyPriceX, weekly: weeklyPriceX, biweekly: biweeklyPriceX }"
                                 :chartSeries="{
                                     daily: chartSeriesDailyPrice,
                                     weekly: chartSeriesWeeklyPrice,
-                                    monthly: chartSeriesMonthlyPrice
+                                    biweekly: chartSeriesBiweeklyPrice
                                 }"
                             />
                         </div>
                     </v-col>
                 </v-row>
             </div>
-
-            <!-- <div>
-                <v-row>
-                    <v-col cols="12" md="12">
-                        <div v-if="loading">
-                            <v-skeleton-loader type="article" />
-                        </div>
-                        <div v-else>
-                            <PriceTrends
-                                title="Volume Trend & Chart"
-                                :yAxisTitle="yAxisVolumeTitle"
-                                :xAxisCategories="{ daily: dailyVolumeX, weekly: weeklyVolumeX, monthly: monthlyVolumeX }"
-                                :chartSeries="{
-                                    daily: chartSeriesDailyVolume,
-                                    weekly: chartSeriesWeeklyVolume,
-                                    monthly: chartSeriesMonthlyVolume
-                                }"
-                            />
-                        </div>
-                    </v-col>
-                </v-row>
-            </div> -->
 
             <!-- Footer -->
             <div>

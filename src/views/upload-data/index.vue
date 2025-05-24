@@ -4,21 +4,28 @@ import api from '@/plugins/axios';
 import { useDisplay } from 'vuetify';
 
 const { mobile } = useDisplay();
-const selectedFile = ref<File | null>(null);
+const selectedFileDataset = ref<File | null>(null);
+const selectedFileModel = ref<File | null>(null);
 const snackbar = ref(false);
 const snackbarText = ref('');
 const SnackbarColor = ref('error');
 
 // Menangani perubahan file
-const onFileChange = (event: Event) => {
+const onFileChangeDataset = (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-        selectedFile.value = input.files[0];
+        selectedFileDataset.value = input.files[0];
+    }
+};
+const onFileChangeModel = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+        selectedFileModel.value = input.files[0];
     }
 };
 
 const uploadData = async () => {
-    if (!selectedFile.value) {
+    if (!selectedFileDataset.value) {
         snackbarText.value = 'Please select a file';
         snackbar.value = true;
         SnackbarColor.value = 'error';
@@ -34,10 +41,47 @@ const uploadData = async () => {
     }
 
     const formData = new FormData();
-    formData.append('dataset', selectedFile.value);
+    formData.append('dataset', selectedFileDataset.value);
 
     try {
         const response = await api.post('http://103.41.204.232:81/dataset/uploads', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}` // Tambahkan token ke header
+            }
+        });
+
+        snackbarText.value = 'Upload successful!';
+        snackbar.value = true;
+        SnackbarColor.value = 'primary';
+    } catch (error) {
+        snackbarText.value = 'Upload failed!';
+        snackbar.value = true;
+        SnackbarColor.value = 'error';
+    }
+};
+
+const uploadModel = async () => {
+    if (!selectedFileModel.value) {
+        snackbarText.value = 'Please select a file';
+        snackbar.value = true;
+        SnackbarColor.value = 'error';
+        return;
+    }
+
+    const token = localStorage.getItem('access_token'); // Ambil token dari localStorage
+    if (!token) {
+        snackbarText.value = 'Missing authentication token!';
+        snackbar.value = true;
+        SnackbarColor.value = 'error';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('model', selectedFileModel.value);
+
+    try {
+        const response = await api.post('http://103.41.204.232:81/dataset/upload-model', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}` // Tambahkan token ke header
@@ -73,7 +117,7 @@ const uploadData = async () => {
                     <!-- Input File -->
                     <v-col cols="12" class="d-flex flex-wrap gap-2">
                         <v-file-input
-                            @change="onFileChange"
+                            @change="onFileChangeDataset"
                             label="Upload Files"
                             prepend-inner-icon="mdi-magnify"
                             variant="outlined"
@@ -107,7 +151,7 @@ const uploadData = async () => {
                     <!-- Input File -->
                     <v-col cols="12" class="d-flex flex-wrap gap-2">
                         <v-file-input
-                            @change="onFileChange"
+                            @change="onFileChangeModel"
                             label="Upload Files"
                             prepend-inner-icon="mdi-magnify"
                             variant="outlined"
@@ -115,7 +159,7 @@ const uploadData = async () => {
                         ></v-file-input>
                         <!-- Tombol Upload -->
                         <div cols="2" class="text-right mx-2">
-                            <v-btn @click="uploadData" rounded="md" color="white" class="bg-primary px-sm-5 px-md-7" size="large" flat
+                            <v-btn @click="uploadModel" rounded="md" color="white" class="bg-primary px-sm-5 px-md-7" size="large" flat
                                 ><v-icon start>mdi-upload</v-icon>Upload</v-btn
                             >
                         </div>

@@ -1,27 +1,84 @@
 <script setup lang="ts">
 /*Call Components*/
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import api from '@/plugins/axios';
 import { useDisplay } from 'vuetify';
 
 const { mobile } = useDisplay();
-const settings = ref({
-    algorithm: 'LSTM',
-    currency: 'USD',
-    unit: 'Kg'
-});
-const algorithms = ['LSTM', 'ARIMA', 'SVR'];
-const currencies = ['USD', 'IDR', 'MYR'];
-const units = ['Kg', 'Ton', 'Gram'];
+
+const currencyOptions = ['USD', 'IDR', 'MYR'];
+const unitOptions = ['MT', 'KG', 'GR'];
+const notificationCategoryOptions = [
+    { text: 'Absolute', value: 1 },
+    { text: 'Relative', value: 2 }
+];
+
+const algorithms = ref<string[]>([]);
+const currencies = ref<string[]>([]);
+const units = ref<string[]>([]);
+const notification_categories = ref<number[]>([]);
+const notification_values = ref<number[]>([]);
+
 const snackbar = ref(false);
 const snackbarText = ref('');
 const SnackbarColor = ref('error');
 
-function saveSettings() {
-    snackbarText.value = 'No Action';
-    snackbar.value = true;
-    SnackbarColor.value = 'primary';
-    // Kirim ke backend kalau perlu
-}
+const loading = ref(true);
+
+onMounted(async () => {
+    try {
+        const token = localStorage.getItem('access_token');
+        const res = await api.get('http://103.41.204.232:81/setting', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const rawData = res.data?.data || {};
+        if (rawData.algorithm) algorithms.value.push(rawData.algorithm);
+        if (rawData.currency) currencies.value.push(rawData.currency);
+        if (rawData.unit) units.value.push(rawData.unit);
+        if (rawData.notification_category) notification_categories.value.push(rawData.notification_category);
+        if (rawData.notification_value) notification_values.value.push(rawData.notification_value);
+    } catch (error: any) {
+        console.error('❌ Error fetching table data:', error?.response?.data || error);
+    } finally {
+        loading.value = false;
+    }
+});
+
+const saveSettings = async () => {
+    try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            snackbarText.value = 'Missing authentication token!';
+            snackbar.value = true;
+            SnackbarColor.value = 'error';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('algorithm', algorithms.value.toString());
+        formData.append('currency', currencies.value.toString());
+        formData.append('unit', units.value.toString());
+        formData.append('notification_category', notification_categories.value.toString());
+        formData.append('notification_value', notification_values.value.toString());
+
+        await api.post('http://103.41.204.232:81/setting/update', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        snackbarText.value = 'Upload successful!';
+        snackbar.value = true;
+        SnackbarColor.value = 'primary';
+    } catch (error) {
+        console.log('Gibran', error);
+        snackbarText.value = 'Upload failed!';
+        snackbar.value = true;
+        SnackbarColor.value = 'error';
+    }
+};
 </script>
 
 <template>
@@ -41,7 +98,7 @@ function saveSettings() {
                     <v-col> Training Algorithm </v-col>
                     <v-col cols="4">
                         <v-select
-                            v-model="settings.algorithm"
+                            v-model="algorithms"
                             :items="algorithms"
                             label="Training Algorithm"
                             variant="outlined"
@@ -53,30 +110,66 @@ function saveSettings() {
                 <v-row>
                     <v-col> Currency </v-col>
                     <v-col cols="4">
-                        <v-select
-                            v-model="settings.currency"
-                            :items="currencies"
-                            label="Currency"
-                            variant="outlined"
-                            density="comfortable"
-                        />
+                        <v-select v-model="currencies" :items="currencyOptions" label="Currency" variant="outlined" density="comfortable" />
                     </v-col>
                 </v-row>
                 <!-- Unit -->
                 <v-row>
                     <v-col> Unit </v-col>
                     <v-col cols="4">
-                        <v-select v-model="settings.unit" :items="units" label="Unit" variant="outlined" density="comfortable" />
+                        <v-select v-model="units" :items="unitOptions" label="Unit" variant="outlined" density="comfortable" />
+                    </v-col>
+                </v-row>
+                <!-- Notification Category -->
+                <v-row>
+                    <v-col> Notification Category </v-col>
+                    <v-col cols="4">
+                        <v-select
+                            v-model="notification_categories"
+                            :items="notificationCategoryOptions"
+                            item-title="text"
+                            item-value="value"
+                            label="Notification Category"
+                            variant="outlined"
+                            density="comfortable"
+                        />
+                    </v-col>
+                </v-row>
+                <!-- Notification Value -->
+                <v-row>
+                    <v-col> Notification Value </v-col>
+                    <v-col cols="4">
+                        <v-text-field
+                            v-model.number="notification_values[0]"
+                            type="number"
+                            label="Notification Value"
+                            variant="outlined"
+                            density="comfortable"
+                        />
                     </v-col>
                 </v-row>
                 <!-- Button -->
                 <v-row class="flex-nowrap" gutters>
                     <v-col cols="12" class="d-flex justify-end flex-wrap gap-2 mt-md-4">
-                        <v-btn rounded="md" color="white" class="bg-primary px-sm-5 px-md-7 mx-1 my-1" size="large" flat @click="saveSettings">
+                        <v-btn
+                            rounded="md"
+                            color="white"
+                            class="bg-primary px-sm-5 px-md-7 mx-1 my-1"
+                            size="large"
+                            flat
+                            @click="saveSettings"
+                        >
                             Save Settings
                         </v-btn>
 
-                        <v-btn rounded="md" color="white" class="bg-warning px-sm-5 px-md-7 mx-1 my-1" size="large" flat @click="saveSettings">
+                        <v-btn
+                            rounded="md"
+                            color="white"
+                            class="bg-warning px-sm-5 px-md-7 mx-1 my-1"
+                            size="large"
+                            flat
+                            @click="saveSettings"
+                        >
                             Retrain Model
                         </v-btn>
                     </v-col>

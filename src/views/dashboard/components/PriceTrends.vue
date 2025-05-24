@@ -8,20 +8,20 @@ const { mobile } = useDisplay();
 const props = defineProps<{
   title: string;
   yAxisTitle: string;
-  xAxisCategories: { daily: string[]; weekly: string[]; monthly: string[] };
-  chartSeries: { daily: { name: string; data: number[] }[]; weekly: { name: string; data: number[] }[]; monthly: { name: string; data: number[] }[] };
+  xAxisCategories: { daily: string[]; weekly: string[]; biweekly: string[] };
+  chartSeries: { daily: { name: string; data: number[] }[]; weekly: { name: string; data: number[] }[]; biweekly: { name: string; data: number[] }[] };
 }>();
 
 // State untuk pilihan dropdown
-const selectedOption = ref<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+const selectedOption = ref<'Daily' | 'Weekly' | 'Biweekly'>('Daily');
 
 // Mengupdate kategori X dan series data berdasarkan pilihan dropdown
 const filteredXAxisCategories = computed(() => {
-  return props.xAxisCategories[selectedOption.value.toLowerCase() as 'daily' | 'weekly' | 'monthly'];
+  return props.xAxisCategories[selectedOption.value.toLowerCase() as 'daily' | 'weekly' | 'biweekly'];
 });
 
 const filteredChartSeries = computed(() => {
-  return props.chartSeries[selectedOption.value.toLowerCase() as 'daily' | 'weekly' | 'monthly'];
+  return props.chartSeries[selectedOption.value.toLowerCase() as 'daily' | 'weekly' | 'biweekly'];
 });
 
 // Konfigurasi utama ApexCharts
@@ -54,7 +54,7 @@ const chartOptions = computed(() => ({
           <v-select
             label="Categories"
             v-model="selectedOption"
-            :items="['Daily', 'Weekly', 'Monthly']"
+            :items="['Daily', 'Weekly', 'Biweekly']"
           ></v-select>
         </v-col>
       </v-row>
