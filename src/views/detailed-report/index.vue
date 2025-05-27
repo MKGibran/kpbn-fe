@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /*Call Components*/
-import DownloadReport from '../detailed-report/components/DownloadReport.vue';
-import TradingData from '../detailed-report/components/TradingData.vue';
+import DownloadReport from '@/components/detailed-report/DownloadReport.vue';
+import TradingData from '@/components/detailed-report/TradingData.vue';
 </script>
 
 <template>

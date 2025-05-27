@@ -3,33 +3,61 @@
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import api from '@/plugins/axios';
-import PriceTrends from '../dashboard/components/PriceTrends.vue';
-import DailyPrice from '@/views/dashboard/components/DailyPrice.vue';
-import WeeklyPrice from '@/views/dashboard/components/WeeklyPrice.vue';
-import BiweeklyPrice from '@/views/dashboard/components/BiweeklyPrice.vue';
+import PriceTrends from '@/components/dashboard/PriceTrends.vue';
+import DailyPrice from '@/components/dashboard/DailyPrice.vue';
+import WeeklyPrice from '@/components/dashboard/WeeklyPrice.vue';
+import BiweeklyPrice from '@/components/dashboard/BiweeklyPrice.vue';
 import { fi } from 'date-fns/locale';
 import { useDisplay } from 'vuetify';
 import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
+import func from 'vue-temp/vue-editor-bridge';
 
 const { mobile } = useDisplay();
 // Data untuk chart Harga terhadap waktu
 const yAxisPriceTitle = 'Price';
 
+const forecastData = ref<any[]>([]);
 const dailyPriceX = ref<string[]>([]);
 const weeklyPriceX = ref<string[]>([]);
 const biweeklyPriceX = ref<string[]>([]);
+
 const lastDailyKpbn = ref<number | null>(null);
+const lastDailyDate = ref<string | null>(null);
 const lastWeeklyKpbn = ref<number | null>(null);
+const lastWeeklyDate = ref<string | null>(null);
 const lastBiweeklyKpbn = ref<number | null>(null);
+const lastBiweeklyDate = ref<string | null>(null);
+
 const chartSeriesDailyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesWeeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesBiweeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 
+const token = localStorage.getItem('access_token');
+
 const loading = ref(true); // Loading
 
 onMounted(async () => {
+    await getForecast();
+    await getDataset();
+});
+
+async function getForecast() {
     try {
-        const token = localStorage.getItem('access_token');
+        const res = await api.get('http://103.41.204.232:81/dataset/forecast/lstm', {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        forecastData.value = res.data.data;
+    } catch (error: any) {
+        console.error('Error fetching dashboard data:', error);
+    }
+}
+
+async function getDataset() {
+    try {
         const res = await api.get('http://103.41.204.232:81/dataset', {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -39,19 +67,28 @@ onMounted(async () => {
 
         const rawData = res.data.data;
 
+        // Get last date on each category
         const lastData = getLastData(rawData);
         lastDailyKpbn.value = lastData.lastDailyKpbn;
-        lastWeeklyKpbn.value = lastData.lastWeeklyKpbn;
-        lastBiweeklyKpbn.value = lastData.lastBiweeklyKpbn;
+        lastDailyDate.value = lastData.lastDailyDate;
 
-        console.log('Gibran', lastDailyKpbn.value);
+        lastWeeklyKpbn.value = lastData.lastWeeklyKpbn;
+        lastWeeklyDate.value = lastData.lastWeeklyDate;
+
+        lastBiweeklyKpbn.value = lastData.lastBiweeklyKpbn;
+        lastBiweeklyDate.value = lastData.lastBiweeklyDate;
 
         // Daily: ambil 30 data terakhir
         const last30 = rawData.slice(-30);
         last30.sort((a: { date: string }, b: { date: string }) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+        // Get forecast daily
+        let forecastDaily = groupForecastData(lastDailyDate.value, 'Daily');
+        console.log('Gibran', forecastDaily);
+
         const dailyCategories: string[] = [];
         const dailySeries = {
+            forecast: [] as number[],
             kpbn: [] as number[],
             mdexC1: [] as number[],
             mdexC3: [] as number[],
@@ -60,14 +97,20 @@ onMounted(async () => {
 
         last30.forEach((entry: any) => {
             dailyCategories.push(formatDate(entry.date));
+            dailySeries.forecast.push(Number(parseFloat(entry.kpbn).toFixed(2)));
             dailySeries.kpbn.push(Number(parseFloat(entry.kpbn).toFixed(2)));
             dailySeries.mdexC1.push(Number(parseFloat(entry.mdex_c1).toFixed(2)));
             dailySeries.mdexC3.push(Number(parseFloat(entry.mdex_c3).toFixed(2)));
             dailySeries.rotterdam.push(Number(parseFloat(entry.rotterdam).toFixed(2)));
         });
 
+        // Add forecast data
+        dailyCategories.push(formatDate(forecastDaily.Tanggal));
+        dailySeries.forecast.push(Number(parseFloat(forecastDaily.Prediksi).toFixed(2)));
+
         dailyPriceX.value = dailyCategories;
         chartSeriesDailyPrice.value = [
+            { name: 'Forecast', data: dailySeries.forecast },
             { name: 'KPBN', data: dailySeries.kpbn },
             { name: 'MDEX C1', data: dailySeries.mdexC1 },
             { name: 'MDEX C3', data: dailySeries.mdexC3 },
@@ -95,6 +138,9 @@ onMounted(async () => {
             groupedWeekly[key].push(entry);
         });
 
+        // Get forecast weekly
+        let forecastWeekly = groupForecastData(lastWeeklyDate.value, 'Weekly');
+
         const weeklyCategories = Object.keys(groupedWeekly).sort((a, b) => {
             const weekNumA = parseInt(a.match(/Week (\d+)/)?.[1] || '0');
             const weekNumB = parseInt(b.match(/Week (\d)/)?.[1] || '0');
@@ -102,6 +148,7 @@ onMounted(async () => {
         });
 
         const weeklySeries = {
+            forecast: [] as number[],
             kpbn: [] as number[],
             mdexC1: [] as number[],
             mdexC3: [] as number[],
@@ -110,14 +157,20 @@ onMounted(async () => {
 
         weeklyCategories.forEach((key) => {
             const group = groupedWeekly[key];
+            weeklySeries.forecast.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
             weeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
             weeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
             weeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
             weeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
         });
 
+        // Add forecast data
+        weeklyCategories.push(formatDate(forecastWeekly.Tanggal));
+        weeklySeries.forecast.push(Number(parseFloat(forecastWeekly.Prediksi).toFixed(2)));
+
         weeklyPriceX.value = weeklyCategories;
         chartSeriesWeeklyPrice.value = [
+            { name: 'Forecast', data: weeklySeries.forecast },
             { name: 'KPBN', data: weeklySeries.kpbn },
             { name: 'MDEX C1', data: weeklySeries.mdexC1 },
             { name: 'MDEX C3', data: weeklySeries.mdexC3 },
@@ -148,22 +201,32 @@ onMounted(async () => {
         });
 
         const biweeklySeries = {
+            forecast: [] as number[],
             kpbn: [] as number[],
             mdexC1: [] as number[],
             mdexC3: [] as number[],
             rotterdam: [] as number[]
         };
 
+        // Get forecast biweekly
+        let forecastBiweekly = groupForecastData(lastBiweeklyDate.value, 'Weekly');
+
         biweeklyCategories.forEach((key) => {
             const group = groupedBiweekly[key];
+            biweeklySeries.forecast.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
             biweeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
             biweeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
             biweeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
             biweeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
         });
 
+        // Add forecast data
+        biweeklyCategories.push(formatDate(forecastBiweekly.Tanggal));
+        biweeklySeries.forecast.push(Number(parseFloat(forecastBiweekly.Prediksi).toFixed(2)));
+
         biweeklyPriceX.value = biweeklyCategories;
         chartSeriesBiweeklyPrice.value = [
+            { name: 'Forecast', data: biweeklySeries.forecast },
             { name: 'KPBN', data: biweeklySeries.kpbn },
             { name: 'MDEX C1', data: biweeklySeries.mdexC1 },
             { name: 'MDEX C3', data: biweeklySeries.mdexC3 },
@@ -174,40 +237,41 @@ onMounted(async () => {
     } finally {
         loading.value = false;
     }
-});
+}
 
 function getLastData(rawData: any[]) {
     // Mengambil data KPBN terakhir untuk kategori Daily
-    const lastDailyKpbn = Number(parseFloat(rawData[rawData.length - 1].kpbn).toFixed(2));
+    const lastEntry = rawData[rawData.length - 1];
+    const lastDailyKpbn = Number(parseFloat(lastEntry.kpbn).toFixed(2));
+    const lastDailyDate = lastEntry.date;
 
     // Mengambil data KPBN terakhir untuk kategori Weekly
+    const lastWeekNumber = getWeekNumber(new Date(lastEntry.date));
     const filteredWeekly = rawData.filter((entry) => {
         const date = new Date(entry.date);
-        return (
-            date.getMonth() === new Date(rawData[rawData.length - 1].date).getMonth() &&
-            date.getFullYear() === new Date(rawData[rawData.length - 1].date).getFullYear()
-        );
+        return getWeekNumber(date) === lastWeekNumber && date.getFullYear() === new Date(lastEntry.date).getFullYear();
     });
-
     const lastWeeklyKpbn = filteredWeekly.length ? Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2)) : null;
+    const lastWeeklyDate = filteredWeekly.length ? filteredWeekly[filteredWeekly.length - 1].date : null;
 
     // Mengambil data KPBN terakhir untuk kategori Biweekly
+    const lastBiweeklyNumber = Math.ceil(lastWeekNumber / 2);
     const filteredBiweekly = rawData.filter((entry) => {
         const date = new Date(entry.date);
-        return (
-            date.getMonth() === new Date(rawData[rawData.length - 1].date).getMonth() &&
-            date.getFullYear() === new Date(rawData[rawData.length - 1].date).getFullYear()
-        );
+        return Math.ceil(getWeekNumber(date) / 2) === lastBiweeklyNumber && date.getFullYear() === new Date(lastEntry.date).getFullYear();
     });
-
     const lastBiweeklyKpbn = filteredBiweekly.length
         ? Number(parseFloat(filteredBiweekly[filteredBiweekly.length - 1].kpbn).toFixed(2))
         : null;
+    const lastBiweeklyDate = filteredBiweekly.length ? filteredBiweekly[filteredBiweekly.length - 1].date : null;
 
     return {
         lastDailyKpbn,
+        lastDailyDate,
         lastWeeklyKpbn,
-        lastBiweeklyKpbn
+        lastWeeklyDate,
+        lastBiweeklyKpbn,
+        lastBiweeklyDate
     };
 }
 
@@ -252,12 +316,10 @@ function groupByWeek(data: any[]) {
     return grouped;
 }
 
-function getWeekNumber(date: Date): number {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d as any) - (yearStart as any)) / 86400000 + 1) / 7);
+function getWeekNumber(date: Date) {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
 }
 
 // Biweekly
@@ -275,6 +337,38 @@ function groupByBiweek(data: any[]) {
 
     return biweeks;
 }
+
+function formatDateKey(date: any) {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+        console.error('Invalid date in formatDateKey:', date);
+        return null;
+    }
+    return d.toISOString().split('T')[0];
+}
+
+
+// grouping data
+function groupForecastData(date: any, category: string) {
+    let offset = 0;
+    if (category === 'Daily') offset = 1;
+    else if (category === 'Weekly') offset = 7;
+    else if (category === 'Biweekly') offset = 14;
+    
+    const baseDate = new Date(date);
+    baseDate.setDate(baseDate.getDate() + offset);
+
+    const key = formatDateKey(baseDate);
+    if (!key) return;
+
+    const result = forecastData.value.find((f: any) => {
+        const forecastDate = f.Tanggal;
+        return forecastDate === key;
+    });
+
+    return result;
+}
+
 </script>
 
 <template>
