@@ -44,7 +44,7 @@ const uploadData = async () => {
     formData.append('dataset', selectedFileDataset.value);
 
     try {
-        const response = await api.post('http://103.41.204.232:81/dataset/uploads', formData, {
+        const response = await api.post('/dataset/uploads', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}` // Tambahkan token ke header
@@ -81,7 +81,7 @@ const uploadModel = async () => {
     formData.append('model', selectedFileModel.value);
 
     try {
-        const response = await api.post('http://103.41.204.232:81/dataset/upload-model', formData, {
+        const response = await api.post('/dataset/upload-model', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}` // Tambahkan token ke header

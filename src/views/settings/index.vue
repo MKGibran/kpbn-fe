@@ -6,6 +6,7 @@ import { useDisplay } from 'vuetify';
 
 const { mobile } = useDisplay();
 
+const token = localStorage.getItem('access_token');
 const currencyOptions = ['USD', 'IDR', 'MYR'];
 const unitOptions = ['MT', 'KG', 'GR'];
 const notificationCategoryOptions = [
@@ -27,8 +28,7 @@ const loading = ref(true);
 
 onMounted(async () => {
     try {
-        const token = localStorage.getItem('access_token');
-        const res = await api.get('http://103.41.204.232:81/setting', {
+        const res = await api.get('/setting', {
             headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -47,7 +47,6 @@ onMounted(async () => {
 
 const saveSettings = async () => {
     try {
-        const token = localStorage.getItem('access_token');
         if (!token) {
             snackbarText.value = 'Missing authentication token!';
             snackbar.value = true;
@@ -62,7 +61,7 @@ const saveSettings = async () => {
         formData.append('notification_category', notification_categories.value.toString());
         formData.append('notification_value', notification_values.value.toString());
 
-        await api.post('http://103.41.204.232:81/setting/update', formData, {
+        await api.post('/setting/update', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
@@ -73,12 +72,37 @@ const saveSettings = async () => {
         snackbar.value = true;
         SnackbarColor.value = 'primary';
     } catch (error) {
-        console.log('Gibran', error);
         snackbarText.value = 'Upload failed!';
         snackbar.value = true;
         SnackbarColor.value = 'error';
     }
 };
+
+const retrainModel = async () => {
+    try {
+        if (!token) {
+            snackbarText.value = 'Missing authentication token!';
+            snackbar.value = true;
+            SnackbarColor.value = 'error';
+            return;
+        }
+
+        await api.get('/dataset/train/lstm', {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        snackbarText.value = 'Retraining model successful!';
+        snackbar.value = true;
+        SnackbarColor.value = 'primary';
+    } catch (error) {
+        snackbarText.value = 'Retraining model failed!';
+        snackbar.value = true;
+        SnackbarColor.value = 'error';
+    }
+}
 </script>
 
 <template>
@@ -168,7 +192,7 @@ const saveSettings = async () => {
                             class="bg-warning px-sm-5 px-md-7 mx-1 my-1"
                             size="large"
                             flat
-                            @click="saveSettings"
+                            @click="retrainModel"
                         >
                             Retrain Model
                         </v-btn>

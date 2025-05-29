@@ -15,7 +15,7 @@ const logout = async () => {
     }
 
     try {
-        await axios.delete('http://103.41.204.232:81/user/logout', {
+        await axios.delete('/user/logout', {
             headers: { Authorization: `Bearer ${token}` },
         });
     } catch (error: unknown) {

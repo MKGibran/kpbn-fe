@@ -6,6 +6,7 @@ import api from '@/plugins/axios';
 import axios from 'axios';
 
 // State
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const form = ref<VForm | null>(null);
 const email = ref('');
 const password = ref('');

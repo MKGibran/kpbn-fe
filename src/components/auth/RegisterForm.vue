@@ -20,7 +20,7 @@ const register = async () => {
 
     try {
         const response = await api.post(
-            'http://103.41.204.232:81/user/register',
+            '/user/register',
             new URLSearchParams({
                 name: name.value,
                 email: email.value,

@@ -5,7 +5,7 @@ const MainRoutes = {
     meta: {
         requiresAuth: true
     },
-    redirect: '/dashboard',  // Redirect ke halaman utama yang valid
+    redirect: '/dashboard', // Redirect ke halaman utama yang valid
     component: () => import('@/layouts/full/FullLayout.vue'),
     children: [
         {
@@ -27,6 +27,11 @@ const MainRoutes = {
             name: 'Settings',
             path: 'settings',
             component: () => import('@/views/settings/index.vue')
+        },
+        {
+            name: 'Notifications',
+            path: 'notifications',
+            component: () => import('@/views/notifications/index.vue')
         },
         {
             name: 'Logout',

@@ -8,11 +8,14 @@ import NotificationDD from './vertical-header/NotificationDD.vue';
 import ProfileDD from './vertical-header/ProfileDD.vue';
 import { Icon } from '@iconify/vue';
 import { useDisplay } from 'vuetify';
+import api from '@/plugins/axios';
 
 const { mobile } = useDisplay();
 const sidebarMenu = shallowRef(sidebarItems);
 const sDrawer = ref(true);
 const user = ref({ name: 'Guest' });
+const notifications = ref([]);
+const token = localStorage.getItem('access_token');
 
 // Ambil user dari localStorage
 try {
@@ -20,6 +23,25 @@ try {
     user.value = storedUser ? JSON.parse(storedUser) : { name: 'Guest' };
 } catch (error) {
     user.value = { name: 'Guest' };
+}
+
+onMounted(async () => {
+    // await getNotification();
+});
+
+async function getNotification() {
+    try {
+        const res = await api.get('/get-notification', {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${token}`
+            }
+        })
+
+        notifications.value = res.data.data;
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
 }
 </script>
 
@@ -54,9 +76,10 @@ try {
         <v-app-bar elevation="0" height="70" class="bg-background" :style="{ paddingTop: 'env(safe-area-inset-top)' }">
             <div class="d-flex align-center justify-space-between w-100">
                 <div>
-                    <v-btn v-if="!mobile" class="hidden-lg-and-up text-muted" @click="sDrawer = !sDrawer" icon variant="flat" size="small">
+                    <v-btn v-if="!mobile" class="text-muted" @click="sDrawer = !sDrawer" icon variant="flat" size="small">
                         <Icon icon="solar:hamburger-menu-outline" height="20" />
                     </v-btn>
+                    <NotificationDD :notifications="notifications" />
                 </div>
                 <div v-if="!mobile">
                     <v-btn class="mr-2" href="">{{ user.name }}</v-btn>

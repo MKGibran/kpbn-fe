@@ -2,10 +2,11 @@ import axios from 'axios';
 
 const api = axios.create({
     baseURL: 'http://103.41.204.232:81',
+    // baseURL: 'http://127.0.0.1:5000',
     headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    });
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+});
 
     // Logging untuk debugging
     api.interceptors.request.use(

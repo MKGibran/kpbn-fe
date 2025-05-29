@@ -25,7 +25,7 @@ onMounted(async () => {
     try {
         const token = localStorage.getItem('access_token');
 
-        const res = await api.get('http://103.41.204.232:81/dataset', {
+        const res = await api.get('/dataset', {
             headers: {
                 Authorization: `Bearer ${token}`
             }

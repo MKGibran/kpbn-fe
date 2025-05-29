@@ -10,9 +10,12 @@ import BiweeklyPrice from '@/components/dashboard/BiweeklyPrice.vue';
 import { fi } from 'date-fns/locale';
 import { useDisplay } from 'vuetify';
 import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
-import func from 'vue-temp/vue-editor-bridge';
+
+// import func from 'vue-temp/vue-editor-bridge';
 
 const { mobile } = useDisplay();
+const loading = ref(true);
+const token = localStorage.getItem('access_token');
 // Data untuk chart Harga terhadap waktu
 const yAxisPriceTitle = 'Price';
 
@@ -32,18 +35,37 @@ const chartSeriesDailyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesWeeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesBiweeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 
-const token = localStorage.getItem('access_token');
-
-const loading = ref(true); // Loading
+const exchangeRates = ref<{ IDR: number; MYR: number }>({ IDR: 1, MYR: 1 });
+const settingsData = ref<{ unit: string; currency: string }>({
+    unit: 'KG',
+    currency: 'IDR'
+});
 
 onMounted(async () => {
+    exchangeRates.value = await fetchExchangeRates();
+    await getSettings();
     await getForecast();
     await getDataset();
 });
 
+// Fetching
+async function getSettings() {
+    try {
+        const res = await api.get('/setting', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        settingsData.value = res.data?.data || { unit: 'KG', currency: 'IDR' };
+    } catch (error: any) {
+        console.error('❌ Error fetching table data:', error?.response?.data || error);
+    } finally {
+        loading.value = false;
+    }
+}
+// Ambil data forecast
 async function getForecast() {
     try {
-        const res = await api.get('http://103.41.204.232:81/dataset/forecast/lstm', {
+        const res = await api.get('/dataset/forecast/lstm', {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
@@ -58,7 +80,7 @@ async function getForecast() {
 
 async function getDataset() {
     try {
-        const res = await api.get('http://103.41.204.232:81/dataset', {
+        const res = await api.get('/dataset', {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
@@ -84,7 +106,6 @@ async function getDataset() {
 
         // Get forecast daily
         let forecastDaily = groupForecastData(lastDailyDate.value, 'Daily');
-        console.log('Gibran', forecastDaily);
 
         const dailyCategories: string[] = [];
         const dailySeries = {
@@ -97,11 +118,11 @@ async function getDataset() {
 
         last30.forEach((entry: any) => {
             dailyCategories.push(formatDate(entry.date));
-            dailySeries.forecast.push(Number(parseFloat(entry.kpbn).toFixed(2)));
-            dailySeries.kpbn.push(Number(parseFloat(entry.kpbn).toFixed(2)));
-            dailySeries.mdexC1.push(Number(parseFloat(entry.mdex_c1).toFixed(2)));
-            dailySeries.mdexC3.push(Number(parseFloat(entry.mdex_c3).toFixed(2)));
-            dailySeries.rotterdam.push(Number(parseFloat(entry.rotterdam).toFixed(2)));
+            dailySeries.forecast.push(convertPrice(Number(parseFloat(entry.kpbn).toFixed(2))));
+            dailySeries.kpbn.push(convertPrice(Number(parseFloat(entry.kpbn).toFixed(2))));
+            dailySeries.mdexC1.push(convertPrice(Number(entry.mdex_c1)));
+            dailySeries.mdexC3.push(convertPrice(Number(entry.mdex_c3)));
+            dailySeries.rotterdam.push(convertPrice(Number(entry.rotterdam)));
         });
 
         // Add forecast data
@@ -157,11 +178,11 @@ async function getDataset() {
 
         weeklyCategories.forEach((key) => {
             const group = groupedWeekly[key];
-            weeklySeries.forecast.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
-            weeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
-            weeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
-            weeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
-            weeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
+            weeklySeries.forecast.push(convertPrice(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2))));
+            weeklySeries.kpbn.push(convertPrice(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2))));
+            weeklySeries.mdexC1.push(convertPrice(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2))));
+            weeklySeries.mdexC3.push(convertPrice(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2))));
+            weeklySeries.rotterdam.push(convertPrice(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2))));
         });
 
         // Add forecast data
@@ -213,11 +234,11 @@ async function getDataset() {
 
         biweeklyCategories.forEach((key) => {
             const group = groupedBiweekly[key];
-            biweeklySeries.forecast.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
-            biweeklySeries.kpbn.push(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2)));
-            biweeklySeries.mdexC1.push(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2)));
-            biweeklySeries.mdexC3.push(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2)));
-            biweeklySeries.rotterdam.push(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2)));
+            biweeklySeries.forecast.push(convertPrice(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2))));
+            biweeklySeries.kpbn.push(convertPrice(Number(parseFloat(group[group.length - 1].kpbn).toFixed(2))));
+            biweeklySeries.mdexC1.push(convertPrice(Number(parseFloat(group[group.length - 1].mdex_c1).toFixed(2))));
+            biweeklySeries.mdexC3.push(convertPrice(Number(parseFloat(group[group.length - 1].mdex_c3).toFixed(2))));
+            biweeklySeries.rotterdam.push(convertPrice(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2))));
         });
 
         // Add forecast data
@@ -237,6 +258,60 @@ async function getDataset() {
     } finally {
         loading.value = false;
     }
+}
+
+// UI Interactions
+// Function to fetch exchange rates
+async function fetchExchangeRates(): Promise<{ IDR: number; MYR: number }> {
+    try {
+        const response = await fetch(
+            'https://api.exchangerate.host/latest?access_key=d83921db3627ca32086823d96d3f664b&base=EUR&symbols=USD,IDR,MYR'
+        );
+        const data = await response.json();
+
+        if (
+            !data ||
+            !data.rates ||
+            typeof data.rates.USD !== 'number' ||
+            typeof data.rates.IDR !== 'number' ||
+            typeof data.rates.MYR !== 'number'
+        ) {
+            throw new Error('Invalid exchange rate response structure');
+        }
+
+        // Hitung manual USD → IDR dan USD → MYR
+        const usdToIdr = data.rates.IDR / data.rates.USD;
+        const usdToMyr = data.rates.MYR / data.rates.USD;
+
+        return {
+            IDR: usdToIdr,
+            MYR: usdToMyr
+        };
+    } catch (error) {
+        console.error('Gagal mengambil kurs:', error);
+        return { IDR: 1, MYR: 1 }; // fallback nilai default
+    }
+}
+
+// Function to convert price
+function convertPrice(currentPrice: number): number {
+    let unitPrice = currentPrice;
+
+    // Konversi berdasarkan unit
+    if (settingsData.value.unit === 'KG') {
+        unitPrice = currentPrice / 1000;
+    } else if (settingsData.value.unit === 'GR') {
+        unitPrice = currentPrice / 1000000;
+    }
+
+    // Konversi berdasarkan currency
+    if (settingsData.value.currency === 'IDR') {
+        unitPrice *= exchangeRates.value.IDR;
+    } else if (settingsData.value.currency === 'MYR') {
+        unitPrice *= exchangeRates.value.MYR;
+    }
+
+    return Number(unitPrice.toFixed(2));
 }
 
 function getLastData(rawData: any[]) {
@@ -347,14 +422,13 @@ function formatDateKey(date: any) {
     return d.toISOString().split('T')[0];
 }
 
-
 // grouping data
 function groupForecastData(date: any, category: string) {
     let offset = 0;
     if (category === 'Daily') offset = 1;
     else if (category === 'Weekly') offset = 7;
     else if (category === 'Biweekly') offset = 14;
-    
+
     const baseDate = new Date(date);
     baseDate.setDate(baseDate.getDate() + offset);
 
@@ -368,7 +442,6 @@ function groupForecastData(date: any, category: string) {
 
     return result;
 }
-
 </script>
 
 <template>
