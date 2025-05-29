@@ -91,13 +91,13 @@ async function getDataset() {
 
         // Get last date on each category
         const lastData = getLastData(rawData);
-        lastDailyKpbn.value = convertPrice(lastData.lastDailyKpbn);
+        lastDailyKpbn.value = lastData.lastDailyKpbn;
         lastDailyDate.value = lastData.lastDailyDate;
 
-        lastWeeklyKpbn.value = convertPrice(lastData.lastWeeklyKpbn);
+        lastWeeklyKpbn.value = lastData.lastWeeklyKpbn;
         lastWeeklyDate.value = lastData.lastWeeklyDate;
 
-        lastBiweeklyKpbn.value = convertPrice(lastData.lastBiweeklyKpbn);
+        lastBiweeklyKpbn.value = lastData.lastBiweeklyKpbn;
         lastBiweeklyDate.value = lastData.lastBiweeklyDate;
 
         // Daily: ambil 30 data terakhir
@@ -317,7 +317,7 @@ function convertPrice(currentPrice: number): number {
 function getLastData(rawData: any[]) {
     // Mengambil data KPBN terakhir untuk kategori Daily
     const lastEntry = rawData[rawData.length - 1];
-    const lastDailyKpbn = Number(parseFloat(lastEntry.kpbn).toFixed(2));
+    const lastDailyKpbn = convertPrice(Number(parseFloat(lastEntry.kpbn).toFixed(2)));
     const lastDailyDate = lastEntry.date;
 
     // Mengambil data KPBN terakhir untuk kategori Weekly
@@ -326,7 +326,7 @@ function getLastData(rawData: any[]) {
         const date = new Date(entry.date);
         return getWeekNumber(date) === lastWeekNumber && date.getFullYear() === new Date(lastEntry.date).getFullYear();
     });
-    const lastWeeklyKpbn = filteredWeekly.length ? Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2)) : null;
+    const lastWeeklyKpbn = filteredWeekly.length ? convertPrice(Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2))) : null;
     const lastWeeklyDate = filteredWeekly.length ? filteredWeekly[filteredWeekly.length - 1].date : null;
 
     // Mengambil data KPBN terakhir untuk kategori Biweekly
@@ -336,7 +336,7 @@ function getLastData(rawData: any[]) {
         return Math.ceil(getWeekNumber(date) / 2) === lastBiweeklyNumber && date.getFullYear() === new Date(lastEntry.date).getFullYear();
     });
     const lastBiweeklyKpbn = filteredBiweekly.length
-        ? Number(parseFloat(filteredBiweekly[filteredBiweekly.length - 1].kpbn).toFixed(2))
+        ? convertPrice(Number(parseFloat(filteredBiweekly[filteredBiweekly.length - 1].kpbn).toFixed(2)))
         : null;
     const lastBiweeklyDate = filteredBiweekly.length ? filteredBiweekly[filteredBiweekly.length - 1].date : null;
 
