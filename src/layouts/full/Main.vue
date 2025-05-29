@@ -26,7 +26,7 @@ try {
 }
 
 onMounted(async () => {
-    // await getNotification();
+    await getNotification();
 });
 
 async function getNotification() {
