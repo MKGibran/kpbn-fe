@@ -91,13 +91,13 @@ async function getDataset() {
 
         // Get last date on each category
         const lastData = getLastData(rawData);
-        lastDailyKpbn.value = lastData.lastDailyKpbn;
+        lastDailyKpbn.value = convertPrice(lastData.lastDailyKpbn);
         lastDailyDate.value = lastData.lastDailyDate;
 
-        lastWeeklyKpbn.value = lastData.lastWeeklyKpbn;
+        lastWeeklyKpbn.value = convertPrice(lastData.lastWeeklyKpbn);
         lastWeeklyDate.value = lastData.lastWeeklyDate;
 
-        lastBiweeklyKpbn.value = lastData.lastBiweeklyKpbn;
+        lastBiweeklyKpbn.value = convertPrice(lastData.lastBiweeklyKpbn);
         lastBiweeklyDate.value = lastData.lastBiweeklyDate;
 
         // Daily: ambil 30 data terakhir
@@ -454,13 +454,13 @@ function groupForecastData(date: any, category: string) {
             <div v-if="!mobile">
                 <v-row>
                     <v-col class="min-card" cols="12" md="4">
-                        <DailyPrice :latest-price="lastDailyKpbn" />
+                        <DailyPrice :currency="settingsData.currency" :latest-price="lastDailyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <WeeklyPrice :latest-price="lastWeeklyKpbn" />
+                        <WeeklyPrice :currency="settingsData.currency" :latest-price="lastWeeklyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <BiweeklyPrice :latest-price="lastBiweeklyKpbn" />
+                        <BiweeklyPrice :currency="settingsData.currency" :latest-price="lastBiweeklyKpbn" />
                     </v-col>
                 </v-row>
             </div>
@@ -468,13 +468,13 @@ function groupForecastData(date: any, category: string) {
             <div v-else class="scroll-wrapper">
                 <v-row class="flex-nowrap" gutters>
                     <v-col class="min-card" cols="12" md="4">
-                        <DailyPrice :latest-price="lastDailyKpbn" />
+                        <DailyPrice :currency="settingsData.currency" :latest-price="lastDailyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <WeeklyPrice :latest-price="lastWeeklyKpbn" />
+                        <WeeklyPrice :currency="settingsData.currency" :latest-price="lastWeeklyKpbn" />
                     </v-col>
                     <v-col class="min-card" cols="12" md="4">
-                        <BiweeklyPrice :latest-price="lastBiweeklyKpbn" />
+                        <BiweeklyPrice :currency="settingsData.currency" :latest-price="lastBiweeklyKpbn" />
                     </v-col>
                 </v-row>
             </div>

@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import { tableActionData } from '@/data/Dashboard';
 const props = defineProps<{
     latestPrice: number | null;
+    currency: string;
 }>();
 </script>
 <template>
@@ -17,9 +18,12 @@ const props = defineProps<{
                     <v-card-title class="text-h6 textSecondary font-weight-medium mb-0">Biweekly Price</v-card-title>
                 </div>
             </div>
-            <v-row class="d-flex justify-space-between">
-                <v-col cols="7" xl="5" class="mb-1">
-                    <h2 class="text-h2 mb-1 mt-2">IDR {{ latestPrice !== null ? latestPrice.toLocaleString('id-ID') : '' }}</h2>
+            <v-row class="d-flex justify-space-between align-end">
+                <v-col cols="6" xl="6">
+                    <h2 class="text-h5 textSecondary mb-0">{{ currency }}</h2>
+                </v-col>
+                <v-col cols="6" xl="6">
+                    <h2 class="text-h2 mb-0">{{ latestPrice !== null ? latestPrice.toLocaleString('id-ID') : '' }}</h2>
                 </v-col>
             </v-row>
         </v-card-item>
