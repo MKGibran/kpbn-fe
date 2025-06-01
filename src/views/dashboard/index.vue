@@ -138,17 +138,20 @@ async function getDataset() {
             { name: 'Rotterdam', data: dailySeries.rotterdam }
         ];
 
-        // Weekly
+        // Last entry date untuk acuan 3 bulan terakhir
         const lastEntryDate = new Date(rawData[rawData.length - 1].date);
-        const targetMonth = lastEntryDate.getMonth();
-        const targetYear = lastEntryDate.getFullYear();
+        const threeMonthsAgo = new Date(lastEntryDate);
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
+        //
+        // WEEKLY
+        //
+        const groupedWeekly: Record<string, any[]> = {};
         const filteredWeekly = rawData.filter((entry: any) => {
             const date = new Date(entry.date);
-            return date.getMonth() === targetMonth && date.getFullYear() === targetYear;
+            return date >= threeMonthsAgo && date <= lastEntryDate;
         });
 
-        const groupedWeekly: Record<string, any[]> = {};
         filteredWeekly.forEach((entry: any) => {
             const date = new Date(entry.date);
             const weekNumber = Math.ceil(date.getDate() / 7);
@@ -159,13 +162,16 @@ async function getDataset() {
             groupedWeekly[key].push(entry);
         });
 
-        // Get forecast weekly
         let forecastWeekly = groupForecastData(lastWeeklyDate.value, 'Weekly');
 
         const weeklyCategories = Object.keys(groupedWeekly).sort((a, b) => {
-            const weekNumA = parseInt(a.match(/Week (\d+)/)?.[1] || '0');
-            const weekNumB = parseInt(b.match(/Week (\d)/)?.[1] || '0');
-            return weekNumA - weekNumB;
+            const parseLabel = (label: string) => {
+                const match = label.match(/Week (\d+) - (\w{3}) (\d{4})/);
+                if (!match) return new Date();
+                const [, , month, year] = match;
+                return new Date(`${month} 1, ${year}`);
+            };
+            return parseLabel(a).getTime() - parseLabel(b).getTime();
         });
 
         const weeklySeries = {
@@ -185,7 +191,6 @@ async function getDataset() {
             weeklySeries.rotterdam.push(convertPrice(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2))));
         });
 
-        // Add forecast data
         weeklyCategories.push(formatDate(forecastWeekly.Tanggal));
         weeklySeries.forecast.push(Number(parseFloat(forecastWeekly.Prediksi).toFixed(2)));
 
@@ -198,9 +203,16 @@ async function getDataset() {
             { name: 'Rotterdam', data: weeklySeries.rotterdam }
         ];
 
-        // Biweekly
+        //
+        // BIWEEKLY
+        //
         const groupedBiweekly: Record<string, any[]> = {};
-        rawData.forEach((entry: any) => {
+        const filteredBiweekly = rawData.filter((entry: any) => {
+            const date = new Date(entry.date);
+            return date >= threeMonthsAgo && date <= lastEntryDate;
+        });
+
+        filteredBiweekly.forEach((entry: any) => {
             const date = new Date(entry.date);
             const day = date.getDate();
             const part = day <= 15 ? '1st Half' : '2nd Half';
@@ -229,7 +241,6 @@ async function getDataset() {
             rotterdam: [] as number[]
         };
 
-        // Get forecast biweekly
         let forecastBiweekly = groupForecastData(lastBiweeklyDate.value, 'Weekly');
 
         biweeklyCategories.forEach((key) => {
@@ -241,7 +252,6 @@ async function getDataset() {
             biweeklySeries.rotterdam.push(convertPrice(Number(parseFloat(group[group.length - 1].rotterdam).toFixed(2))));
         });
 
-        // Add forecast data
         biweeklyCategories.push(formatDate(forecastBiweekly.Tanggal));
         biweeklySeries.forecast.push(Number(parseFloat(forecastBiweekly.Prediksi).toFixed(2)));
 
@@ -326,7 +336,9 @@ function getLastData(rawData: any[]) {
         const date = new Date(entry.date);
         return getWeekNumber(date) === lastWeekNumber && date.getFullYear() === new Date(lastEntry.date).getFullYear();
     });
-    const lastWeeklyKpbn = filteredWeekly.length ? convertPrice(Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2))) : null;
+    const lastWeeklyKpbn = filteredWeekly.length
+        ? convertPrice(Number(parseFloat(filteredWeekly[filteredWeekly.length - 1].kpbn).toFixed(2)))
+        : null;
     const lastWeeklyDate = filteredWeekly.length ? filteredWeekly[filteredWeekly.length - 1].date : null;
 
     // Mengambil data KPBN terakhir untuk kategori Biweekly
@@ -367,30 +379,6 @@ function getLast30Entries(data: any[]) {
 }
 
 // Weekly
-function groupByWeek(data: any[]) {
-    const grouped: Record<string, any[]> = {};
-
-    data.forEach((entry) => {
-        const date = new Date(entry.date);
-        const year = date.getFullYear();
-
-        // Dapatkan minggu ke berapa dalam bulan (1-5)
-        const weekNumber = Math.ceil(date.getDate() / 7);
-
-        // Format nama bulan
-        const monthName = date.toLocaleString('default', { month: 'short' });
-
-        const key = `Week ${weekNumber} - ${monthName} ${year}`;
-
-        if (!grouped[key]) {
-            grouped[key] = [];
-        }
-        grouped[key].push(entry);
-    });
-
-    return grouped;
-}
-
 function getWeekNumber(date: Date) {
     const startOfYear = new Date(date.getFullYear(), 0, 1);
     const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
@@ -398,19 +386,11 @@ function getWeekNumber(date: Date) {
 }
 
 // Biweekly
-function groupByBiweek(data: any[]) {
-    const biweeks: Record<string, any[]> = {};
-
-    data.forEach((entry) => {
-        const date = new Date(entry.date);
-        const yearBiweek = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-        if (!biweeks[yearBiweek]) {
-            biweeks[yearBiweek] = [];
-        }
-        biweeks[yearBiweek].push(entry);
-    });
-
-    return biweeks;
+function isInLast3Months(date: Date): boolean {
+    const now = new Date();
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(now.getMonth() - 3);
+    return date >= threeMonthsAgo && date <= now;
 }
 
 function formatDateKey(date: any) {
