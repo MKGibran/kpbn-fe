@@ -36,7 +36,7 @@ async function getNotification() {
                 'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`
             }
-        })
+        });
 
         notifications.value = res.data.data;
     } catch (error) {
@@ -75,17 +75,14 @@ async function getNotification() {
         <!-- App Bar -->
         <v-app-bar elevation="0" height="70" class="bg-background" :style="{ paddingTop: 'env(safe-area-inset-top)' }">
             <div class="d-flex align-center justify-space-between w-100">
-                <div>
+                <div :class="{ 'pt-7': mobile }">
                     <v-btn v-if="!mobile" class="text-muted" @click="sDrawer = !sDrawer" icon variant="flat" size="small">
                         <Icon icon="solar:hamburger-menu-outline" height="20" />
                     </v-btn>
                     <NotificationDD :notifications="notifications" />
                 </div>
-                <div v-if="!mobile">
-                    <v-btn class="mr-2" href="">{{ user.name }}</v-btn>
-                    <ProfileDD />
-                </div>
-                <div v-if="mobile" class="pt-7">
+
+                <div :class="{ 'pt-7': mobile }" class="d-flex align-center">
                     <v-btn class="mr-2" href="">{{ user.name }}</v-btn>
                     <ProfileDD />
                 </div>
