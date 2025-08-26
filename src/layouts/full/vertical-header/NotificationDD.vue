@@ -3,7 +3,7 @@ import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { format } from 'date-fns';
-import { enUS  } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import api from '@/plugins/axios';
 
 const router = useRouter();
@@ -44,17 +44,17 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <template>
-    <!-- Snackbar untuk menampilkan pesan -->
+    <!-- Snackbar -->
     <v-snackbar v-model="showMessage" color="primary" timeout="3000" location="top">
         Logout Succeed
-        <template v-slot:actions>
+        <template #actions>
             <v-btn color="white" @click="showMessage = false">Tutup</v-btn>
         </template>
     </v-snackbar>
 
     <!-- Menu -->
     <v-menu :close-on-content-click="false">
-        <template v-slot:activator="{ props: menuProps }">
+        <template #activator="{ props: menuProps }">
             <v-btn icon class="custom-hover-primary" size="small" variant="text" v-bind="menuProps" color="primary">
                 <v-badge dot color="primary" offset-x="-5" offset-y="-3">
                     <Icon icon="solar:bell-bing-line-duotone" height="22" />
@@ -63,11 +63,7 @@ const formatDate = (dateStr: string) => {
         </template>
 
         <v-sheet rounded="md" width="300" elevation="10" class="mt-2">
-            <v-list class="py-0" lines="one" density="compact">
-                <v-list-item v-if="props.notifications.length === 0">
-                    <v-list-item-title class="pl-4 text-body-2">Tidak ada notifikasi</v-list-item-title>
-                </v-list-item>
-
+            <v-list class="py-0" lines="two" density="compact">
                 <v-list-item
                     v-for="(notification, index) in props.notifications"
                     :key="index"
@@ -78,7 +74,8 @@ const formatDate = (dateStr: string) => {
                     <template #prepend>
                         <Icon :icon="notification.is_read === 0 ? 'mynaui:envelope' : 'mynaui:envelope-open'" height="22" />
                     </template>
-                    <v-list-item-title class="pl-4 text-body-1">
+
+                    <v-list-item-title class="pl-4 text-body-1 text-truncate-2">
                         {{ notification.text }}
                     </v-list-item-title>
                 </v-list-item>
@@ -86,3 +83,16 @@ const formatDate = (dateStr: string) => {
         </v-sheet>
     </v-menu>
 </template>
+
+<style>
+.text-truncate-2 {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2; /* maksimal 2 baris */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal !important; /* jangan dipaksa satu baris */
+    line-height: 1.4em;
+    max-height: 2.8em; /* pas untuk 2 baris */
+}
+</style>

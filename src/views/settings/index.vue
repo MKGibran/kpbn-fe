@@ -14,9 +14,9 @@ const notificationCategoryOptions = [
     { text: 'Relative', value: 2 }
 ];
 
-const algorithms = ref<string[]>([]);
-const currencies = ref<string[]>([]);
-const units = ref<string[]>([]);
+const algorithms = ref<string>('');
+const currencies = ref<string>('');
+const units = ref<string>('');
 const notification_categories = ref<number[]>([]);
 const notification_values = ref<number[]>([]);
 
@@ -33,9 +33,9 @@ onMounted(async () => {
         });
 
         const rawData = res.data?.data || {};
-        if (rawData.algorithm) algorithms.value.push(rawData.algorithm);
-        if (rawData.currency) currencies.value.push(rawData.currency);
-        if (rawData.unit) units.value.push(rawData.unit);
+        if (rawData.algorithm) algorithms.value = rawData.algorithm;
+        if (rawData.currency) currencies.value = rawData.currency;
+        if (rawData.unit) units.value = rawData.unit;
         if (rawData.notification_category) notification_categories.value.push(rawData.notification_category);
         if (rawData.notification_value) notification_values.value.push(rawData.notification_value);
     } catch (error: any) {
@@ -55,9 +55,9 @@ const saveSettings = async () => {
         }
 
         const formData = new FormData();
-        formData.append('algorithm', algorithms.value.toString());
-        formData.append('currency', currencies.value.toString());
-        formData.append('unit', units.value.toString());
+        formData.append('algorithm', algorithms.value);
+        formData.append('currency', currencies.value);
+        formData.append('unit', units.value);
         formData.append('notification_category', notification_categories.value.toString());
         formData.append('notification_value', notification_values.value.toString());
 
@@ -123,7 +123,7 @@ const retrainModel = async () => {
                     <v-col cols="4">
                         <v-select
                             v-model="algorithms"
-                            :items="algorithms"
+                            :items="['LSTM', 'GRU', 'RNN']"
                             label="Training Algorithm"
                             variant="outlined"
                             density="comfortable"

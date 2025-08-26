@@ -4,12 +4,14 @@ import { ref } from 'vue';
 import { onMounted } from 'vue';
 import api from '@/plugins/axios';
 import PriceTrends from '@/components/dashboard/PriceTrends.vue';
+import TableData from '@/components/dashboard/TableData.vue';
 import DailyPrice from '@/components/dashboard/DailyPrice.vue';
 import WeeklyPrice from '@/components/dashboard/WeeklyPrice.vue';
 import BiweeklyPrice from '@/components/dashboard/BiweeklyPrice.vue';
-import { fi } from 'date-fns/locale';
+import { da, fi } from 'date-fns/locale';
+import dayjs from 'dayjs';
 import { useDisplay } from 'vuetify';
-import { VSkeletonLoader } from 'vuetify/labs/VSkeletonLoader';
+import { VSkeletonLoader } from 'vuetify/components';
 
 // import func from 'vue-temp/vue-editor-bridge';
 
@@ -31,6 +33,11 @@ const lastWeeklyDate = ref<string | null>(null);
 const lastBiweeklyKpbn = ref<number | null>(null);
 const lastBiweeklyDate = ref<string | null>(null);
 
+const dailyTableData = ref<any[]>([]);
+const weeklyTableData = ref<any[]>([]);
+const biweeklyTableData = ref<any[]>([]);
+const loadingTable = ref(true);
+
 const chartSeriesDailyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesWeeklyPrice = ref<{ name: string; data: number[] }[]>([]);
 const chartSeriesBiweeklyPrice = ref<{ name: string; data: number[] }[]>([]);
@@ -41,27 +48,24 @@ const settingsData = ref<{ unit: string; currency: string }>({
     currency: 'IDR'
 });
 
+// Settings
+const algorithms = ref<string>('');
+const currencies = ref<string>('');
+const units = ref<string>('');
+const notification_categories = ref<number[]>([]);
+const notification_values = ref<number[]>([]);
+
+const parse = (d: string) => dayjs(d); // format "YYYY-MM-DD"
+
 onMounted(async () => {
     exchangeRates.value = await fetchExchangeRates();
+    // await getForecast();
+    // await getDataset();
+    await getTableData();
     await getSettings();
-    await getForecast();
-    await getDataset();
 });
 
 // Fetching
-async function getSettings() {
-    try {
-        const res = await api.get('/setting', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        settingsData.value = res.data?.data || { unit: 'KG', currency: 'IDR' };
-    } catch (error: any) {
-        console.error('❌ Error fetching table data:', error?.response?.data || error);
-    } finally {
-        loading.value = false;
-    }
-}
 // Ambil data forecast
 async function getForecast() {
     try {
@@ -270,6 +274,92 @@ async function getDataset() {
     }
 }
 
+async function getSettings() {
+    try {
+        const res = await api.get('/setting', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const rawData = res.data?.data || {};
+        if (rawData.algorithm) algorithms.value = rawData.algorithm;
+        if (rawData.currency) currencies.value = rawData.currency;
+        if (rawData.unit) units.value = rawData.unit;
+        if (rawData.notification_category) notification_categories.value.push(rawData.notification_category);
+        if (rawData.notification_value) notification_values.value.push(rawData.notification_value);
+    } catch (error: any) {
+        console.error('❌ Error fetching table data:', error?.response?.data || error);
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function getTableData() {
+    try {
+        loadingTable.value = true;
+        const res = await api.get('/dashboard/table', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        let body = res.data;
+        if (typeof body === 'string') {
+            body = JSON.parse(
+                body
+                    .replace(/\bNaN\b/g, 'null')
+                    .replace(/\bInfinity\b/g, 'null')
+                    .replace(/\b-Infinity\b/g, 'null')
+            );
+        }
+
+        const dailyRaw = body?.data?.daily || [];
+        const weeklyRaw = body?.data?.weekly || [];
+        const biweeklyRaw = body?.data?.biweekly || [];
+
+        const dailyFiltered = byLatestRange(dailyRaw, 6, 6); // fallback 6 titik (≈ 2 minggu)
+        const weeklyFiltered = byLatestRange(weeklyRaw, 30, 8); // fallback 8 minggu ~ 2 bulan
+        const biweeklyFiltered = byLatestRange(biweeklyRaw, 60, 6); // fallback 6 titik (≈ 3 bulan)
+
+        dailyTableData.value = dailyFiltered.map((row) => ({
+            ...row,
+            date: formatDate(row.date),
+            kpbn: formatNumber(row.kpbn),
+            mdex_c1: formatNumber(row.mdex_c1),
+            mdex_c3: formatNumber(row.mdex_c3),
+            rotterdam: formatNumber(row.rotterdam),
+            soyoil: formatNumber(row.soyoil),
+            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+        }));
+
+        weeklyTableData.value = weeklyFiltered.map((row) => ({
+            ...row,
+            date: formatDate(row.date),
+            kpbn: formatNumber(row.kpbn),
+            mdex_c1: formatNumber(row.mdex_c1),
+            mdex_c3: formatNumber(row.mdex_c3),
+            rotterdam: formatNumber(row.rotterdam),
+            soyoil: formatNumber(row.soyoil),
+            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+        }));
+
+        biweeklyTableData.value = biweeklyFiltered.map((row) => ({
+            ...row,
+            date: formatDate(row.date),
+            kpbn: formatNumber(row.kpbn),
+            mdex_c1: formatNumber(row.mdex_c1),
+            mdex_c3: formatNumber(row.mdex_c3),
+            rotterdam: formatNumber(row.rotterdam),
+            soyoil: formatNumber(row.soyoil),
+            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+        }));
+    } catch (error: any) {
+        console.error('❌ Error fetching table data:', error?.response?.data || error);
+    } finally {
+        loadingTable.value = false;
+    }
+}
+
 // UI Interactions
 // Function to fetch exchange rates
 async function fetchExchangeRates(): Promise<{ IDR: number; MYR: number }> {
@@ -366,10 +456,50 @@ function getLastData(rawData: any[]) {
 function formatDate(dateStr: string) {
     const date = new Date(dateStr);
     return date.toLocaleDateString('id-ID', {
+        weekday: 'long', // tampilkan nama hari
         day: '2-digit',
         month: 'short',
         year: 'numeric'
     });
+}
+
+type TableRow = {
+    date: string;
+    kpbn: number;
+    mdex_c1: number;
+    mdex_c3: number;
+    rotterdam: number;
+    soyoil: number;
+    soyoil_dalian_c1: number;
+    soyoil_dalian_c3: number;
+};
+
+function byLatestRange<T extends TableRow>(rows: T[], days: number, fallbackCount: number): T[] {
+    if (!rows?.length) return [];
+    // cari tanggal latest di seri ini
+    const latest = rows.reduce((acc, r) => {
+        const t = parse(r.date);
+        return t.isAfter(acc) ? t : acc;
+    }, parse(rows[0].date));
+    const cutoff = latest.subtract(days, 'day');
+
+    // inklusif: >= cutoff
+    let filtered = rows.filter((r) => !parse(r.date).isBefore(cutoff));
+
+    // fallback kalau kosong: ambil N item terakhir
+    if (!filtered.length) {
+        filtered = rows.slice(-fallbackCount);
+    }
+
+    // urutkan ascending by date
+    filtered.sort((a, b) => (parse(a.date).isBefore(parse(b.date)) ? 1 : -1));
+    return filtered;
+}
+
+// Format angka
+function formatNumber(num: number) {
+    if (num == null || isNaN(num)) return '-';
+    return num.toFixed(1); // 1 decimal
 }
 
 // Daily
@@ -428,10 +558,10 @@ function groupForecastData(date: any, category: string) {
     <div>
         <div class="center mb-5">
             <h3 class="font-weight-bold">Historical Price Trends and Forecast</h3>
-            <span class="text-textSecondary text-sm ml-2">(IDR/kg)</span>
         </div>
         <div>
-            <div v-if="!mobile">
+            <!-- Report Card -->
+            <!-- <div v-if="!mobile">
                 <v-row>
                     <v-col class="min-card" cols="12" md="4">
                         <DailyPrice :currency="settingsData.currency" :latest-price="lastDailyKpbn" />
@@ -457,9 +587,20 @@ function groupForecastData(date: any, category: string) {
                         <BiweeklyPrice :currency="settingsData.currency" :latest-price="lastBiweeklyKpbn" />
                     </v-col>
                 </v-row>
+            </div> -->
+
+            <!-- Table Data -->
+            <div v-if="loadingTable">
+                <VSkeletonLoader class="mt-5" type="article" />
+            </div>
+            <div v-else>
+                <TableData title="Daily Price Trends " :tableData="dailyTableData" :currencies="currencies" :units="units" />
+                <TableData title="Weekly Price Trends" :tableData="weeklyTableData" :currencies="currencies" :units="units" />
+                <TableData title="Biweekly Price Trends" :tableData="biweeklyTableData" :currencies="currencies" :units="units" />
             </div>
 
-            <div>
+            <!-- Price Trends and Chart -->
+            <!-- <div>
                 <v-row>
                     <v-col cols="12" md="12">
                         <div v-if="loading">
@@ -479,7 +620,7 @@ function groupForecastData(date: any, category: string) {
                         </div>
                     </v-col>
                 </v-row>
-            </div>
+            </div> -->
 
             <!-- Footer -->
             <div>
