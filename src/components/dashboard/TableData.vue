@@ -28,7 +28,6 @@ const latestDate = computed(() => {
         return new Date(row.date) > new Date(latest) ? row.date : latest;
     }, props.tableData[0].date);
 });
-
 </script>
 
 <template>
@@ -43,9 +42,25 @@ const latestDate = computed(() => {
                 <VDataTable :headers="headers" :items="props.tableData" hide-default-footer class="elevation-1">
                     <!-- Kolom status -->
                     <template #item.status="{ item }">
-                        <v-chip size="small" v-if="item.status === 'Turun'" color="error"><v-icon>mdi-arrow-down</v-icon></v-chip>
-                        <v-chip size="small" v-else-if="item.status === 'Naik'" color="success"><v-icon>mdi-arrow-up</v-icon></v-chip>
-                        <v-chip size="small" v-else color="warning"><v-icon>mdi-minus</v-icon></v-chip>
+                        <v-tooltip :text="item.status" location="top">
+                            <template #activator="{ props }">
+                                <v-chip
+                                    size="small"
+                                    v-bind="props"
+                                    :color="item.status === 'Turun' ? 'error' : item.status === 'Naik' ? 'success' : 'warning'"
+                                >
+                                    <v-icon>
+                                        {{
+                                            item.status === 'Turun'
+                                                ? 'mdi-arrow-down-bold'
+                                                : item.status === 'Naik'
+                                                  ? 'mdi-arrow-up-bold'
+                                                  : 'mdi-arrow-right-bold'
+                                        }}
+                                    </v-icon>
+                                </v-chip>
+                            </template>
+                        </v-tooltip>
                     </template>
 
                     <!-- Kolom date -->
@@ -59,6 +74,7 @@ const latestDate = computed(() => {
                     <template #item.kpbn="{ item }">
                         <span :class="item.date === latestDate ? 'font-weight-bold' : ''">
                             {{ item.kpbn }}
+                            <span v-if="item.date === latestDate" class="text-caption"> (Prediction)</span>
                         </span>
                     </template>
                 </VDataTable>

@@ -61,8 +61,8 @@ onMounted(async () => {
     exchangeRates.value = await fetchExchangeRates();
     // await getForecast();
     // await getDataset();
-    await getTableData();
     await getSettings();
+    await getTableData();
 });
 
 // Fetching
@@ -321,37 +321,37 @@ async function getTableData() {
         dailyTableData.value = dailyFiltered.map((row) => ({
             ...row,
             date: formatDate(row.date),
-            kpbn: formatNumber(row.kpbn),
-            mdex_c1: formatNumber(row.mdex_c1),
-            mdex_c3: formatNumber(row.mdex_c3),
-            rotterdam: formatNumber(row.rotterdam),
-            soyoil: formatNumber(row.soyoil),
-            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
-            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+            kpbn: formatPrice(row.kpbn),
+            mdex_c1: formatPrice(row.mdex_c1),
+            mdex_c3: formatPrice(row.mdex_c3),
+            rotterdam: formatPrice(row.rotterdam),
+            soyoil: formatPrice(row.soyoil),
+            soyoil_dalian_c1: formatPrice(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatPrice(row.soyoil_dalian_c3)
         }));
 
         weeklyTableData.value = weeklyFiltered.map((row) => ({
             ...row,
             date: formatDate(row.date),
-            kpbn: formatNumber(row.kpbn),
-            mdex_c1: formatNumber(row.mdex_c1),
-            mdex_c3: formatNumber(row.mdex_c3),
-            rotterdam: formatNumber(row.rotterdam),
-            soyoil: formatNumber(row.soyoil),
-            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
-            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+            kpbn: formatPrice(row.kpbn),
+            mdex_c1: formatPrice(row.mdex_c1),
+            mdex_c3: formatPrice(row.mdex_c3),
+            rotterdam: formatPrice(row.rotterdam),
+            soyoil: formatPrice(row.soyoil),
+            soyoil_dalian_c1: formatPrice(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatPrice(row.soyoil_dalian_c3)
         }));
 
         biweeklyTableData.value = biweeklyFiltered.map((row) => ({
             ...row,
             date: formatDate(row.date),
-            kpbn: formatNumber(row.kpbn),
-            mdex_c1: formatNumber(row.mdex_c1),
-            mdex_c3: formatNumber(row.mdex_c3),
-            rotterdam: formatNumber(row.rotterdam),
-            soyoil: formatNumber(row.soyoil),
-            soyoil_dalian_c1: formatNumber(row.soyoil_dalian_c1),
-            soyoil_dalian_c3: formatNumber(row.soyoil_dalian_c3)
+            kpbn: formatPrice(row.kpbn),
+            mdex_c1: formatPrice(row.mdex_c1),
+            mdex_c3: formatPrice(row.mdex_c3),
+            rotterdam: formatPrice(row.rotterdam),
+            soyoil: formatPrice(row.soyoil),
+            soyoil_dalian_c1: formatPrice(row.soyoil_dalian_c1),
+            soyoil_dalian_c3: formatPrice(row.soyoil_dalian_c3)
         }));
     } catch (error: any) {
         console.error('❌ Error fetching table data:', error?.response?.data || error);
@@ -452,17 +452,6 @@ function getLastData(rawData: any[]) {
     };
 }
 
-// Format tanggal
-function formatDate(dateStr: string) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', {
-        weekday: 'long', // tampilkan nama hari
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-}
-
 type TableRow = {
     date: string;
     kpbn: number;
@@ -502,6 +491,35 @@ function formatNumber(num: number) {
     return num.toFixed(1); // 1 decimal
 }
 
+function formatPrice(value: number | string) {
+    if (value === null || value === undefined || value === '') return '-';
+    return new Intl.NumberFormat('id-ID', {
+        style: 'decimal',
+        minimumFractionDigits: 1, // selalu ada 1 desimal
+        maximumFractionDigits: 2 // kalau ada lebih, potong max 2
+    }).format(Number(value));
+}
+
+function formatDateKey(date: any) {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+        console.error('Invalid date in formatDateKey:', date);
+        return null;
+    }
+    return d.toISOString().split('T')[0];
+}
+
+// Format tanggal table
+function formatDate(dateStr: string) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', {
+        weekday: 'long', // tampilkan nama hari
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
 // Daily
 function getLast30Entries(data: any[]) {
     if (!Array.isArray(data)) return [];
@@ -521,15 +539,6 @@ function isInLast3Months(date: Date): boolean {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(now.getMonth() - 3);
     return date >= threeMonthsAgo && date <= now;
-}
-
-function formatDateKey(date: any) {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) {
-        console.error('Invalid date in formatDateKey:', date);
-        return null;
-    }
-    return d.toISOString().split('T')[0];
 }
 
 // grouping data

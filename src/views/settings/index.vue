@@ -123,7 +123,7 @@ const retrainModel = async () => {
                     <v-col cols="4">
                         <v-select
                             v-model="algorithms"
-                            :items="['LSTM', 'GRU', 'RNN']"
+                            :items="['LSTM']"
                             label="Training Algorithm"
                             variant="outlined"
                             density="comfortable"

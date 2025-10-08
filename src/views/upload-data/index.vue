@@ -148,8 +148,20 @@ const uploadModel = async () => {
             <v-card-title class="text-h6 font-weight-bold">Upload Model</v-card-title>
             <v-card-text>
                 <v-row align="center">
+                    <v-col> Training Algorithm </v-col>
+                    <v-col cols="6">
+                        <v-select
+                            :items="['LSTM']"
+                            label="Training Algorithm"
+                            variant="outlined"
+                            density="comfortable"
+                        />
+                    </v-col>
+                </v-row>
+                <v-row align="center">
                     <!-- Input File -->
-                    <v-col cols="12" class="d-flex flex-wrap gap-2">
+                    <v-col cols="6"> Model File </v-col>
+                    <v-col cols="6" class="d-flex flex-wrap gap-2">
                         <v-file-input
                             @change="onFileChangeModel"
                             label="Upload Files"
